@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>H∞LE Chapter 1.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --bg:#E8EDEE; --bg2:#D7DFE1; --surface:#F5F8F8; --field:#FFFFFF;
+  --ink:#061013; --muted:#55666A; --line:rgba(6,16,19,.14); --line-strong:rgba(6,16,19,.34);
+  --red:#CC111B; --glow:rgba(40,95,108,.26); --glow-hot:rgba(16,60,72,.6);
+  --ok:#17784A; --warn:#8F5D00;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#03080A; --bg2:#08141A; --surface:#09161A; --field:#061114;
+    --ink:#E8F0F1; --muted:#8C9DA1; --line:rgba(200,230,236,.13); --line-strong:rgba(200,230,236,.32);
+    --red:#E8222C; --glow:rgba(170,215,226,.2); --glow-hot:rgba(228,246,250,.8);
+    --ok:#4CC38A; --warn:#E3B04B;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#03080A; --bg2:#08141A; --surface:#09161A; --field:#061114;
+  --ink:#E8F0F1; --muted:#8C9DA1; --line:rgba(200,230,236,.13); --line-strong:rgba(200,230,236,.32);
+  --red:#E8222C; --glow:rgba(170,215,226,.2); --glow-hot:rgba(228,246,250,.8);
+  --ok:#4CC38A; --warn:#E3B04B;
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Montserrat,"Helvetica Neue",Arial,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+img,svg{max-width:100%}
+.caps{text-transform:uppercase;letter-spacing:.18em}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+.muted{color:var(--muted)}
+.tiny{font-size:13px;color:var(--muted);line-height:1.55}
+:focus-visible{outline:2px solid var(--red);outline-offset:3px}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.6em;min-height:52px;padding:0 28px;font:600 12.5px/1 Montserrat,"Helvetica Neue",Arial,sans-serif;letter-spacing:.22em;text-transform:uppercase;border:1px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer;border-radius:0;text-decoration:none;transition:opacity .15s}
+.btn:hover{opacity:.86}
+.btn.red{background:var(--red);border-color:var(--red);color:#fff}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line-strong)}
+.btn.sm{min-height:38px;padding:0 14px;font-size:11px;letter-spacing:.16em}
+.btn.block{width:100%}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+
+/* infinity mark */
+.inf{width:1.9em;height:.95em;overflow:visible;flex:none}
+.inf path{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.inf .base{stroke:var(--red);stroke-width:7;stroke-dasharray:100;stroke-dashoffset:100;animation:draw 1.9s cubic-bezier(.65,.05,.2,1) .25s forwards}
+.inf .comet{stroke:#fff;stroke-width:2.6;stroke-dasharray:7 93;opacity:0;animation:comet 3.6s linear 2.3s infinite}
+.inf.still .base{animation:none;stroke-dashoffset:0}
+.inf.still .comet{display:none}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes comet{from{stroke-dashoffset:100;opacity:.95}to{stroke-dashoffset:0;opacity:.95}}
+
+/* hero */
+.hero{position:relative;min-height:100vh;min-height:100svh;display:grid;place-items:center;overflow:hidden;border-bottom:1px solid var(--line);isolation:isolate}
+.hero-bg{position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse 38% 48% at 50% 40%,var(--glow),transparent 72%),linear-gradient(180deg,var(--bg2),var(--bg) 85%)}
+.pillar{position:absolute;left:50%;top:6%;width:3px;height:44%;transform:translateX(-50%);background:linear-gradient(transparent,var(--glow-hot) 40%,var(--glow-hot) 70%,transparent);box-shadow:0 0 50px 10px var(--glow)}
+.ring{position:absolute;left:50%;top:41%;width:min(1150px,140vw);height:auto;transform:translate(-50%,-50%) rotate(-7deg);color:var(--glow-hot)}
+.crowd{position:absolute;left:0;right:0;bottom:0;height:150px;background:
+  radial-gradient(circle 11px at 50% 60%,var(--bg) 97%,transparent) 0 0/26px 30px repeat-x,
+  radial-gradient(circle 13px at 50% 60%,var(--bg) 97%,transparent) 11px 16px/31px 34px repeat-x,
+  radial-gradient(circle 12px at 50% 60%,var(--bg) 97%,transparent) 5px 30px/23px 34px repeat-x,
+  linear-gradient(transparent 46px,var(--bg) 62px)}
+.grain{position:absolute;inset:0;opacity:.07;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.chapter{position:absolute;right:28px;top:50%;transform:translateY(-50%) rotate(180deg);writing-mode:vertical-rl;letter-spacing:.42em;font-size:13px;font-weight:600;color:var(--muted)}
+.hero-inner{text-align:center;padding:96px 24px 120px;max-width:760px}
+.logo{display:flex;align-items:center;justify-content:center;gap:.08em;margin:0;font-weight:400;font-size:clamp(64px,14vw,156px);line-height:1;letter-spacing:.1em}
+.logo span{display:block}
+.tagline{margin:34px auto 0;max-width:30ch;font-size:clamp(13px,1.6vw,16px);line-height:1.9;font-weight:500}
+.dash{display:block;width:28px;height:1px;background:var(--line-strong);margin:28px auto}
+.date{margin:0;font-weight:600;font-size:clamp(15px,2.2vw,21px);letter-spacing:.3em}
+.where{margin:8px 0 0;font-size:13px;letter-spacing:.3em;color:var(--muted)}
+.cta-row{margin-top:40px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.fine{margin:16px 0 0;font-size:13px;color:var(--muted)}
+
+/* about */
+.about{display:grid;grid-template-columns:1.35fr 1fr;gap:56px;padding-top:120px;padding-bottom:110px;align-items:end}
+.manifesto{margin:0;font-weight:600;font-size:clamp(30px,4.6vw,54px);line-height:1.12;letter-spacing:.06em}
+.manifesto .dim{display:block;color:var(--muted);margin-top:.2em}
+.about-side{border-left:1px solid var(--line-strong);padding-left:28px}
+.lines{margin:0 0 26px;font-size:14px;line-height:2;font-weight:500}
+.lines:last-child{margin-bottom:0}
+.loop{color:var(--red);font-weight:700}
+
+.sec-title{margin:0 0 36px;font-size:13px;font-weight:600;color:var(--muted);letter-spacing:.3em}
+.inside{padding-bottom:110px}
+.inside-grid{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line)}
+.inside-grid article{padding:28px 24px 8px 0;border-right:1px solid var(--line);margin-right:24px}
+.inside-grid article:last-child{border-right:0;margin-right:0}
+.inside-grid h3{margin:0 0 12px;font-size:14px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;line-height:1.5}
+.inside-grid p{margin:0;font-size:15px;color:var(--muted)}
+.remember{margin:44px 0 0;font-weight:600;font-size:15px;letter-spacing:.3em}
+
+.steps{padding-bottom:110px}
+.step-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:0;counter-reset:s}
+.step-list li{position:relative;padding:0 24px 0 0}
+.step-list .n{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border:1px solid var(--line-strong);border-radius:50%;font-weight:600;font-size:14px;margin-bottom:22px;background:var(--bg);position:relative;z-index:1}
+.step-list li:not(:last-child)::after{content:"";position:absolute;top:20px;left:40px;right:0;height:1px;background:var(--line)}
+.step-list h3{margin:0 0 8px;font-size:15px;font-weight:700}
+.step-list p{margin:0;font-size:15px;color:var(--muted)}
+
+.guard{padding-bottom:110px}
+.guard-inner{border:1px solid var(--line-strong);padding:44px;display:grid;grid-template-columns:1fr 1fr;gap:44px;align-items:center;background:var(--surface)}
+.guard h2{margin:0 0 14px;font-size:clamp(20px,2.6vw,28px);font-weight:600;letter-spacing:.1em;line-height:1.3}
+.guard p{margin:0;color:var(--muted)}
+.guard-list{list-style:none;margin:0;padding:0}
+.guard-list li{padding:14px 0;border-bottom:1px solid var(--line);font-weight:500;display:flex;gap:14px;align-items:baseline}
+.guard-list li:last-child{border-bottom:0}
+.guard-list li::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--red);transform:translateY(-1px)}
+
+.rules{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:18px 0}
+.rules ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;justify-content:center;gap:10px 0}
+.rules li{font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;padding:0 18px;border-right:1px solid var(--line-strong)}
+.rules li:last-child{border-right:0}
+.end{text-align:center;padding:100px 24px 140px}
+.end h2{margin:0 0 30px;font-size:clamp(22px,3.4vw,36px);font-weight:600;letter-spacing:.12em;line-height:1.3}
+
+/* inner pages */
+.page{max-width:620px;margin:0 auto;padding:28px 24px 140px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:6px 0 30px;border-bottom:1px solid var(--line);margin-bottom:36px}
+.mini{display:flex;align-items:center;gap:.06em;font-size:22px;letter-spacing:.1em;text-decoration:none;font-weight:500}
+.back{font-size:12px;letter-spacing:.2em;text-transform:uppercase;text-decoration:none;color:var(--muted);font-weight:600}
+.h-page{margin:0 0 10px;font-size:clamp(24px,5vw,34px);font-weight:600;letter-spacing:.08em;line-height:1.25;text-transform:uppercase}
+.lede{margin:0 0 34px;color:var(--muted)}
+
+.form{display:grid;grid-template-columns:1fr 1fr;gap:22px 18px}
+.f{display:flex;flex-direction:column;gap:7px;min-width:0}
+.f.full{grid-column:1/-1}
+.f label{font-size:13px;font-weight:600}
+.f input,.f select,.f textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--field);border:1px solid var(--line-strong);border-radius:0;padding:12px 14px;min-height:50px;width:100%}
+.f textarea{resize:vertical;min-height:84px}
+.f input:focus,.f select:focus,.f textarea:focus{border-color:var(--ink);outline:none;box-shadow:0 0 0 1px var(--ink)}
+.prefix{display:flex}
+.prefix span{display:flex;align-items:center;padding:0 12px;border:1px solid var(--line-strong);border-right:0;color:var(--muted);font-size:15px;background:var(--surface)}
+.err{min-height:0;font-size:13px;color:var(--red);font-weight:500}
+.err:empty{display:none}
+.count{font-size:12px;color:var(--muted);text-align:right}
+.submit-row{grid-column:1/-1;margin-top:8px}
+
+.status{border:1px solid var(--line-strong);padding:28px;background:var(--surface);margin-bottom:28px}
+.status h2{margin:0 0 8px;font-size:20px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;gap:12px}
+.status p{margin:0;color:var(--muted)}
+.pulse{width:10px;height:10px;border-radius:50%;background:var(--warn);box-shadow:0 0 0 0 var(--warn);animation:pulse 2s infinite;flex:none}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--warn) 60%,transparent)}70%{box-shadow:0 0 0 10px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.summary{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;margin:20px 0 0;font-size:14px}
+.summary dt{color:var(--muted)}
+.summary dd{margin:0;font-weight:500;overflow-wrap:anywhere}
+.next{margin:0 0 28px;padding:0;list-style:none;counter-reset:n}
+.next li{counter-increment:n;display:grid;grid-template-columns:34px 1fr;gap:14px;padding:16px 0;border-bottom:1px solid var(--line)}
+.next li::before{content:counter(n);display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;border:1px solid var(--line-strong);font-size:13px;font-weight:600}
+.next h3{margin:0 0 4px;font-size:15px;font-weight:600}
+.next p{margin:0;font-size:14px;color:var(--muted)}
+.note{border-left:2px solid var(--red);padding:4px 0 4px 16px;font-size:14px;margin:0 0 28px}
+.warnbox{border:1px solid var(--warn);color:var(--ink);padding:14px 16px;font-size:14px;margin-bottom:22px}
+
+.pay{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center;border:1px solid var(--line-strong);padding:24px;margin-bottom:24px}
+.qrbox{background:#fff;padding:10px;line-height:0;width:max-content}
+.qrbox img,.qrbox canvas{display:block}
+.amount{font-size:40px;font-weight:600;letter-spacing:.02em;line-height:1.1;margin:0 0 6px}
+.upi{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0 16px;font-weight:600;overflow-wrap:anywhere}
+
+/* pass */
+.pass{position:relative;border:1px solid var(--line-strong);background:var(--surface);overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;transition:filter .2s}
+.veil .pass{filter:blur(18px)}
+.wm{position:absolute;inset:-20%;pointer-events:none;background-repeat:repeat;z-index:2}
+.pass-in{position:relative;z-index:1;padding:28px}
+.pass-top{display:flex;justify-content:space-between;align-items:center;padding-bottom:20px;border-bottom:1px dashed var(--line-strong)}
+.pass-name{margin:26px 0 6px;font-size:clamp(24px,6vw,34px);font-weight:600;letter-spacing:.1em;line-height:1.2;text-transform:uppercase;overflow-wrap:anywhere}
+.pass-meta{margin:0;font-size:14px;color:var(--muted);letter-spacing:.06em}
+.pass-code{display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:center;margin:26px 0;padding:22px 0;border-top:1px dashed var(--line-strong);border-bottom:1px dashed var(--line-strong)}
+.code{font-size:clamp(32px,8vw,44px);font-weight:600;letter-spacing:.14em;font-variant-numeric:tabular-nums;line-height:1}
+.tick{display:flex;align-items:center;gap:8px;margin:12px 0 6px;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.tick svg{width:22px;height:22px;transform:rotate(-90deg)}
+.tick circle{fill:none;stroke-width:3}
+.venue{margin:0 0 22px}
+.venue h3{margin:0 0 4px;font-size:13px;font-weight:600;color:var(--muted)}
+.venue p{margin:0;font-weight:600}
+
+/* admin */
+.admin{max-width:1000px;margin:0 auto;padding:28px 24px 140px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);margin-bottom:28px}
+.stat{padding:18px 20px;border-right:1px solid var(--line)}
+.stat:last-child{border-right:0}
+.stat b{display:block;font-size:28px;font-weight:600;line-height:1.1}
+.stat span{font-size:13px;color:var(--muted)}
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:22px;overflow-x:auto}
+.tabs button{font:600 12px/1 Montserrat,Arial,sans-serif;letter-spacing:.18em;text-transform:uppercase;background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);padding:16px 18px;cursor:pointer;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--red)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.chips button{font:500 13px/1 Montserrat,Arial,sans-serif;padding:9px 14px;border:1px solid var(--line-strong);background:transparent;color:var(--ink);cursor:pointer;border-radius:999px}
+.chips button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.req{border:1px solid var(--line);padding:20px;margin-bottom:12px;background:var(--surface)}
+.req-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.req h3{margin:0;font-size:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.req .meta{font-size:14px;color:var(--muted);margin:4px 0 0}
+.req q{display:block;margin:14px 0;font-size:15px;quotes:"“" "”"}
+.tag{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:5px 9px;border:1px solid currentColor;white-space:nowrap}
+.tag.review{color:var(--warn)} .tag.accepted{color:var(--ink)} .tag.paid_pending{color:var(--warn)} .tag.confirmed{color:var(--ok)} .tag.rejected{color:var(--red)} .tag.waitlist{color:var(--muted)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.flag{font-size:14px;border-left:2px solid var(--warn);padding:2px 0 2px 12px;margin:12px 0 0}
+.empty{border:1px dashed var(--line-strong);padding:40px 24px;text-align:center;color:var(--muted)}
+.door{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px}
+.door input{font:600 24px/1 Montserrat,Arial,sans-serif;letter-spacing:.3em;width:220px;padding:12px 14px;border:1px solid var(--line-strong);background:var(--field);color:var(--ink);border-radius:0}
+.verdict{padding:24px;border:2px solid;margin-bottom:22px}
+.verdict h3{margin:0 0 4px;font-size:22px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.verdict p{margin:0}
+.verdict.ok{border-color:var(--ok)} .verdict.ok h3{color:var(--ok)}
+.verdict.bad{border-color:var(--red)} .verdict.bad h3{color:var(--red)}
+.verdict.warn{border-color:var(--warn)} .verdict.warn h3{color:var(--warn)}
+.list-box{width:100%;min-height:160px;font:14px/1.6 Montserrat,Arial,sans-serif;background:var(--field);color:var(--ink);border:1px solid var(--line-strong);padding:12px;border-radius:0}
+
+/* demo controls */
+.demo{position:fixed;right:0;bottom:0;z-index:50;padding:0 14px calc(14px + env(safe-area-inset-bottom,0px)) 14px;display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none}
+.demo>*{pointer-events:auto}
+.demo-toggle{font:600 11px/1 Montserrat,Arial,sans-serif;letter-spacing:.18em;text-transform:uppercase;padding:12px 16px;border-radius:999px;background:var(--ink);color:var(--bg);border:0;cursor:pointer;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+.demo-panel{background:var(--surface);border:1px solid var(--line-strong);padding:16px;width:260px;box-shadow:0 12px 40px rgba(0,0,0,.3)}
+.demo-panel p{margin:0 0 12px;font-size:12px;color:var(--muted);line-height:1.5}
+.demo-panel button{display:block;width:100%;text-align:left;font:500 14px/1.3 Montserrat,Arial,sans-serif;background:none;border:0;border-top:1px solid var(--line);padding:11px 0;color:var(--ink);cursor:pointer}
+.demo-panel button:hover{color:var(--red)}
+
+.toast{position:fixed;left:50%;top:0;transform:translateX(-50%);z-index:60;padding-top:calc(14px + env(safe-area-inset-top,0px));pointer-events:none}
+.toast div{background:var(--ink);color:var(--bg);padding:12px 18px;font-size:14px;font-weight:500;opacity:0;transform:translateY(-8px);transition:all .2s}
+.toast.show div{opacity:1;transform:none}
+
+@media (max-width:860px){
+  .about{grid-template-columns:1fr;gap:40px;padding-top:88px}
+  .inside-grid{grid-template-columns:1fr 1fr}
+  .inside-grid article{border-right:0;margin-right:0;border-bottom:1px solid var(--line);padding:24px 0}
+  .step-list{grid-template-columns:1fr 1fr;gap:36px 0}
+  .step-list li::after{display:none}
+  .guard-inner{grid-template-columns:1fr;padding:30px}
+  .stats{grid-template-columns:1fr 1fr}
+  .stat:nth-child(2){border-right:0}
+  .stat:nth-child(-n+2){border-bottom:1px solid var(--line)}
+  .chapter{display:none}
+}
+@media (max-width:560px){
+  .inside-grid,.step-list{grid-template-columns:1fr}
+  .form{grid-template-columns:1fr}
+  .pay,.pass-code{grid-template-columns:1fr}
+  .rules li{padding:0 12px;font-size:11px}
+}
+@media (prefers-reduced-motion:reduce){
+  .inf .base{animation:none;stroke-dashoffset:0}
+  .inf .comet{display:none}
+  .pulse{animation:none}
+  *{transition:none!important}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="demo" id="demo"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"><div></div></div>
+
+<script>
+(function(){
+"use strict";
+var KEY='hoole_v1', DEVKEY='hoole_device', MINEKEY='hoole_mine', ADMINKEY='hoole_admin';
+var DEFAULTS={price:1499, upi:'yourname@okaxis', payee:'HOOLE Events', group:'https://chat.whatsapp.com/your-invite-code', capacity:120, minAge:18, venue:'', map:'', site:'https://your-domain.com', pin:'2310'};
+var EVENT_DATE='Friday, 23 October 2026';
+
+function store(t){return {get:function(k){try{return t.getItem(k)}catch(e){return null}},set:function(k,v){try{t.setItem(k,v)}catch(e){}},del:function(k){try{t.removeItem(k)}catch(e){}}}}
+var ls, ss;
+try{ls=store(window.localStorage)}catch(e){ls=store({getItem:function(){return null},setItem:function(){},removeItem:function(){}})}
+try{ss=store(window.sessionStorage)}catch(e){ss=store({getItem:function(){return null},setItem:function(){},removeItem:function(){}})}
+
+var S=load();
+function load(){
+  var s=null; try{s=JSON.parse(ls.get(KEY)||'null')}catch(e){}
+  if(!s||typeof s!=='object')s={};
+  return {settings:Object.assign({},DEFAULTS,s.settings||{}),requests:s.requests||{}};
+}
+function save(){ls.set(KEY,JSON.stringify(S))}
+function rid(n){var a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',o='',c=crypto.getRandomValues(new Uint32Array(n));for(var i=0;i<n;i++)o+=a[c[i]%a.length];return o}
+function device(){var d=ls.get(DEVKEY);if(!d){d='dev-'+rid(12);ls.set(DEVKEY,d)}return d}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function fnv(str){var h=0x811c9dc5;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0}return h>>>0}
+function codeAt(r,w){var a=fnv(r.secret+':'+w),b=fnv(w+':'+r.id+':'+r.secret);return String(((a^(b>>>5))>>>0)%1000000).padStart(6,'0')}
+function win(){return Math.floor(Date.now()/30000)}
+function fmtCode(c){return c.slice(0,3)+' '+c.slice(3)}
+function money(n){return '₹'+Number(n).toLocaleString('en-IN')}
+function maskPhone(p){return '+91 '+p.slice(0,2)+'••••••'+p.slice(-2)}
+function first(n){return String(n).trim().split(/\s+/)[0]}
+function passUrl(r){return S.settings.site.replace(/\/+$/,'')+'/p/'+r.id}
+function waLink(phone,text){return 'https://wa.me/91'+phone+'?text='+encodeURIComponent(text)}
+function upiLink(r){var s=S.settings;return 'upi://pay?pa='+encodeURIComponent(s.upi)+'&pn='+encodeURIComponent(s.payee)+'&am='+encodeURIComponent(s.price)+'&cu=INR&tn='+encodeURIComponent('HOOLE-'+r.id)}
+function myReq(){var id=ls.get(MINEKEY);return id&&S.requests[id]?S.requests[id]:null}
+function list(){return Object.keys(S.requests).map(function(k){return S.requests[k]}).sort(function(a,b){return b.created-a.created})}
+function held(){return list().filter(function(r){return r.status==='accepted'||r.status==='paid_pending'||r.status==='confirmed'}).length}
+
+var toastT;
+function toast(msg){var t=document.getElementById('toast');t.firstChild.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show')},2400)}
+
+function qr(el,text,size,fallback){
+  if(!el)return; el.innerHTML='';
+  if(typeof QRCode==='undefined'){el.style.lineHeight='1.4';el.style.width=size+'px';el.style.color='#061013';el.style.fontSize='12px';el.textContent=fallback||'QR code could not load.';return}
+  new QRCode(el,{text:text,width:size,height:size,colorDark:'#061013',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+  el.removeAttribute('title');
+}
+
+var P='M60,30 C72,12 104,10 104,30 C104,50 72,48 60,30 C48,12 16,10 16,30 C16,50 48,48 60,30 Z';
+function inf(still){return '<svg class="inf'+(still?' still':'')+'" viewBox="0 0 120 60" aria-hidden="true"><path class="base" pathLength="100" d="'+P+'"/><path class="comet" pathLength="100" d="'+P+'"/></svg>'}
+function mini(){return '<a class="mini" href="#/" aria-label="H∞LE home"><span>H</span>'+inf(true)+'<span>LE</span></a>'}
+var RING='<svg class="ring" viewBox="0 0 1000 300" aria-hidden="true"><defs><linearGradient id="rg" x1="0" x2="1"><stop offset="0" stop-color="currentColor" stop-opacity="0"/><stop offset=".3" stop-color="currentColor" stop-opacity=".95"/><stop offset=".62" stop-color="currentColor" stop-opacity=".2"/><stop offset="1" stop-color="currentColor" stop-opacity=".85"/></linearGradient><filter id="gl" x="-5%" y="-20%" width="110%" height="140%"><feGaussianBlur stdDeviation="5"/></filter></defs><ellipse cx="500" cy="150" rx="480" ry="105" fill="none" stroke="url(#rg)" stroke-width="7" filter="url(#gl)" opacity=".55"/><ellipse cx="500" cy="150" rx="480" ry="105" fill="none" stroke="url(#rg)" stroke-width="2"/></svg>';
+
+/* ---------- router ---------- */
+var timers=[];
+function clearTimers(){timers.forEach(clearInterval);timers=[]}
+function route(){
+  clearTimers();
+  var parts=(location.hash.replace(/^#/,'')||'/').split('/').filter(Boolean);
+  var app=document.getElementById('app');
+  if(parts[0]==='request')viewRequest(app);
+  else if(parts[0]==='p'&&parts[1])viewPass(app,parts[1].toUpperCase());
+  else if(parts[0]==='admin')viewAdmin(app);
+  else viewHome(app);
+  renderDemo();
+}
+function go(h){if(location.hash==='#'+h)route();else location.hash=h;window.scrollTo(0,0)}
+window.addEventListener('hashchange',function(){route();window.scrollTo(0,0)});
+window.addEventListener('storage',function(e){if(e.key===KEY){S=load();var a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;route()}});
+document.addEventListener('visibilitychange',function(){document.body.classList.toggle('veil',document.hidden)});
+
+/* ---------- home ---------- */
+function viewHome(app){
+  var s=S.settings, mine=myReq();
+  var cta=mine?'<a class="btn red" href="#/p/'+mine.id+'">Open your pass</a>':'<a class="btn red" href="#/request">Request an invite</a>';
+  app.innerHTML=
+  '<header class="hero">'+
+    '<div class="hero-bg" aria-hidden="true"><div class="pillar"></div>'+RING+'<div class="crowd"></div><div class="grain"></div></div>'+
+    '<div class="chapter caps" aria-hidden="true">Chapter 1.0</div>'+
+    '<div class="hero-inner">'+
+      '<h1 class="logo" aria-label="H∞LE"><span>H</span>'+inf(false)+'<span>LE</span></h1>'+
+      '<p class="tagline caps">A night to unite where rhythms align and music defines.</p>'+
+      '<span class="dash"></span>'+
+      '<p class="date caps">'+EVENT_DATE+'</p>'+
+      '<p class="where caps">Somewhere in NCR</p>'+
+      '<div class="cta-row">'+cta+'</div>'+
+      '<p class="fine">Invite only. Every request is read by a person.</p>'+
+    '</div>'+
+  '</header>'+
+  '<section class="about wrap" aria-label="About the event">'+
+    '<h2 class="manifesto caps">A gathering of people who feel music <span class="dim">beyond the sound.</span></h2>'+
+    '<div class="about-side">'+
+      '<p class="caps lines">No commercial detours.<br>No filler.<br>No random crowd.</p>'+
+      '<p class="caps lines">Just the space,<br>the music,<br>the people <b class="loop">inside the loop.</b></p>'+
+    '</div>'+
+  '</section>'+
+  '<section class="inside wrap">'+
+    '<h2 class="sec-title caps">What’s in the room</h2>'+
+    '<div class="inside-grid">'+
+      '<article><h3>Unforgettable personalities</h3><p>A room chosen one request at a time, so everyone around you is there for the same reason.</p></article>'+
+      '<article><h3>Vibrant atmosphere</h3><p>Light, space and a crowd that moves together. Built for the night, not for the photo.</p></article>'+
+      '<article><h3>Appropriate sound</h3><p>A system tuned to the room, and selectors who play the long arc instead of the hits.</p></article>'+
+      '<article><h3>Meaningful details</h3><p>Small decisions everywhere, from how you get in to what you hear when you walk through the door.</p></article>'+
+    '</div>'+
+    '<p class="remember caps">A night to remember.</p>'+
+  '</section>'+
+  '<section class="steps wrap">'+
+    '<h2 class="sec-title caps">How you get in</h2>'+
+    '<ol class="step-list">'+
+      '<li><span class="n">1</span><h3>Request an invite</h3><p>Tell us who you are and why you want in. It takes two minutes.</p></li>'+
+      '<li><span class="n">2</span><h3>Profile review</h3><p>A person reads every request. You’ll hear back on WhatsApp.</p></li>'+
+      '<li><span class="n">3</span><h3>Confirm your access</h3><p>Accepted guests pay '+money(s.price)+' by UPI to lock their spot.</p></li>'+
+      '<li><span class="n">4</span><h3>Join the circle</h3><p>Your personal pass unlocks, and you join the private WhatsApp group where the venue drops.</p></li>'+
+    '</ol>'+
+  '</section>'+
+  '<section class="guard wrap">'+
+    '<div class="guard-inner">'+
+      '<div><h2 class="caps">Your pass belongs to you</h2><p>Access can’t be forwarded, sold or screenshotted into the room. If it isn’t yours, it won’t work.</p></div>'+
+      '<ul class="guard-list">'+
+        '<li>Opens only on the phone you applied from</li>'+
+        '<li>Your name runs across the whole pass</li>'+
+        '<li>The entry code changes every 30 seconds and works once</li>'+
+        '<li>Group joins are approved against the guest list</li>'+
+      '</ul>'+
+    '</div>'+
+  '</section>'+
+  '<div class="rules"><ul><li>Invite only</li><li>Strict profile</li><li>Limited capacity</li><li>Music first</li><li>Experience driven</li></ul></div>'+
+  '<section class="end"><h2 class="caps">The loop is small on purpose.</h2>'+cta+'</section>';
+}
+
+/* ---------- request form ---------- */
+function viewRequest(app){
+  var mine=myReq(); if(mine){go('/p/'+mine.id);return}
+  var s=S.settings;
+  app.innerHTML=
+  '<main class="page">'+
+    '<div class="topbar">'+mini()+'<a class="back" href="#/">Back</a></div>'+
+    '<h1 class="h-page">Request an invite</h1>'+
+    '<p class="lede">A person reads every request. Answer honestly; it’s the only way in.</p>'+
+    '<form class="form" id="rf" novalidate>'+
+      '<div class="f full"><label for="name">Full name</label><input id="name" name="name" autocomplete="name" maxlength="60"><div class="err" data-err="name"></div></div>'+
+      '<div class="f"><label for="phone">WhatsApp number</label><div class="prefix"><span>+91</span><input id="phone" name="phone" inputmode="numeric" autocomplete="tel-national" maxlength="14"></div><div class="err" data-err="phone"></div></div>'+
+      '<div class="f"><label for="city">City</label><input id="city" name="city" autocomplete="address-level2" maxlength="40"><div class="err" data-err="city"></div></div>'+
+      '<div class="f"><label for="gender">Gender</label><select id="gender" name="gender"><option value="">Select</option><option>Woman</option><option>Man</option><option>Non-binary</option><option>Prefer not to say</option></select><div class="err" data-err="gender"></div></div>'+
+      '<div class="f"><label for="age">Age</label><input id="age" name="age" inputmode="numeric" maxlength="2"><div class="err" data-err="age"></div></div>'+
+      '<div class="f"><label for="profession">Profession</label><input id="profession" name="profession" maxlength="50"><div class="err" data-err="profession"></div></div>'+
+      '<div class="f"><label for="insta">Instagram</label><div class="prefix"><span>@</span><input id="insta" name="insta" autocapitalize="off" autocorrect="off" maxlength="40"></div><div class="err" data-err="insta"></div></div>'+
+      '<div class="f full"><label for="ref">Who told you about H∞LE? <span class="muted">(optional)</span></label><input id="ref" name="ref" maxlength="60"></div>'+
+      '<div class="f full"><label for="why">Why do you want to join the community?</label><textarea id="why" name="why" maxlength="150" rows="2"></textarea><div class="count" id="wc">0 / 150</div><div class="err" data-err="why"></div></div>'+
+      '<div class="submit-row"><button class="btn red block" type="submit">Send request</button>'+
+      '<p class="tiny">Your details are used only to review your request and run this event. You must be '+esc(s.minAge)+' or older.</p></div>'+
+    '</form>'+
+  '</main>';
+  var f=document.getElementById('rf'), why=document.getElementById('why');
+  why.addEventListener('input',function(){document.getElementById('wc').textContent=why.value.length+' / 150'});
+  f.addEventListener('submit',function(e){
+    e.preventDefault();
+    var d={};new FormData(f).forEach(function(v,k){d[k]=String(v).trim()});
+    f.querySelectorAll('.err').forEach(function(x){x.textContent=''});
+    var ok=true,firstBad=null;
+    function err(k,m){ok=false;var el=f.querySelector('[data-err="'+k+'"]');if(el)el.textContent=m;if(!firstBad)firstBad=f.querySelector('[name="'+k+'"]')}
+    var phone=d.phone.replace(/\D/g,'').slice(-10), insta=d.insta.replace(/^@/,'').replace(/^https?:\/\/(www\.)?instagram\.com\//i,'').replace(/[\/?].*$/,''), age=parseInt(d.age,10);
+    if(d.name.length<2)err('name','Enter your full name.');
+    if(!/^[6-9]\d{9}$/.test(phone))err('phone','Enter a 10-digit Indian mobile number.');
+    else if(list().some(function(r){return r.phone===phone}))err('phone','This number already has a request. Open your pass on the phone you applied from.');
+    if(!d.city)err('city','Enter your city.');
+    if(!d.gender)err('gender','Choose an option.');
+    if(!(age>=Number(s.minAge)&&age<=99))err('age','You need to be '+s.minAge+' or older to attend.');
+    if(!d.profession)err('profession','Tell us what you do.');
+    if(!/^[A-Za-z0-9._]{1,30}$/.test(insta))err('insta','Enter your Instagram username.');
+    if(d.why.length<10)err('why','Write at least a line about why you want in.');
+    if(!ok){if(firstBad)firstBad.focus();return}
+    var id;do{id=rid(6)}while(S.requests[id]);
+    S.requests[id]={id:id,name:d.name,phone:phone,city:d.city,gender:d.gender,age:age,profession:d.profession,insta:insta,ref:d.ref,why:d.why,status:'review',created:Date.now(),device:device(),secret:rid(16),utr:'',utrBad:false,switchReq:null,checkedIn:null};
+    save(); ls.set(MINEKEY,id); go('/p/'+id);
+  });
+}
+
+/* ---------- pass page ---------- */
+function shell(app,r,inner){
+  app.innerHTML='<main class="page"><div class="topbar">'+mini()+'<span class="back">Pass '+esc(r?r.id:'')+'</span></div>'+inner+'</main>';
+}
+function viewPass(app,id){
+  var r=S.requests[id], s=S.settings;
+  if(!r){shell(app,null,'<h1 class="h-page">Pass not found</h1><p class="lede">Check the link in your WhatsApp message, or request an invite.</p><a class="btn" href="#/request">Request an invite</a>');return}
+  if(r.device!==device()){viewLocked(app,r);return}
+  var st=r.status;
+  if(st==='review'){
+    shell(app,r,
+      '<div class="status"><h2><span class="pulse"></span>Request received</h2><p>Your profile is with the host. You’ll get a WhatsApp message on '+maskPhone(r.phone)+' when there’s a decision.</p>'+
+      '<dl class="summary"><dt>Name</dt><dd>'+esc(r.name)+'</dd><dt>City</dt><dd>'+esc(r.city)+'</dd><dt>Instagram</dt><dd>@'+esc(r.insta)+'</dd></dl></div>'+
+      '<p class="sec-title caps">After you’re accepted</p>'+
+      '<ol class="next">'+
+        '<li><div><h3>Pay to confirm</h3><p>This page unlocks payment. Pay '+money(s.price)+' by UPI to lock your spot.</p></div></li>'+
+        '<li><div><h3>Share your transaction ID</h3><p>Enter the UPI transaction ID so the host can match your payment.</p></div></li>'+
+        '<li><div><h3>Get your pass</h3><p>Your personal pass opens here, and you join the private WhatsApp group where the venue is shared.</p></div></li>'+
+      '</ol>'+
+      '<p class="note">Bookmark this page. It opens only on this phone.</p>');
+  }else if(st==='waitlist'){
+    shell(app,r,'<div class="status"><h2><span class="dot" style="background:var(--muted)"></span>You’re on the waitlist</h2><p>The room is full for now. If a spot opens, this page unlocks payment and you’ll get a WhatsApp message.</p></div><p class="note">Keep this page bookmarked on this phone.</p>');
+  }else if(st==='rejected'){
+    shell(app,r,'<div class="status"><h2><span class="dot" style="background:var(--red)"></span>Not this chapter</h2><p>We can’t offer you a spot in Chapter 1.0. Requests for future chapters will open on this page.</p></div>');
+  }else if(st==='accepted'){
+    shell(app,r,
+      '<div class="status"><h2><span class="dot" style="background:var(--ok)"></span>You’re accepted</h2><p>Pay to confirm your spot. Your pass and the group invite unlock once the payment is verified.</p></div>'+
+      (r.utrBad?'<div class="warnbox">No payment matched UTR '+esc(r.utr)+'. Check the transaction ID in your UPI app and enter it again.</div>':'')+
+      '<div class="pay"><div class="qrbox" id="upiqr"></div><div>'+
+        '<p class="amount">'+money(s.price)+'</p><p class="tiny" style="margin:0">Paying '+esc(s.payee)+'</p>'+
+        '<div class="upi"><span>'+esc(s.upi)+'</span><button class="btn ghost sm" type="button" id="cp">Copy UPI ID</button></div>'+
+        '<a class="btn" href="'+esc(upiLink(r))+'">Pay with a UPI app</a>'+
+      '</div></div>'+
+      '<p class="note">Keep the payment note as <b>HOOLE-'+esc(r.id)+'</b>. It tells the host which request the payment belongs to.</p>'+
+      '<form class="form" id="uf" novalidate><div class="f full"><label for="utr">UPI transaction ID (UTR)</label><input id="utr" name="utr" inputmode="numeric" maxlength="12" placeholder="12 digits"><p class="tiny" style="margin:0">Find it in your UPI app under the payment’s details.</p><div class="err" data-err="utr"></div></div>'+
+      '<div class="submit-row"><button class="btn red block" type="submit">Submit payment</button></div></form>');
+    qr(document.getElementById('upiqr'),upiLink(r),168,'QR code could not load. Use the UPI ID instead.');
+    document.getElementById('cp').addEventListener('click',function(){copy(s.upi,'UPI ID copied')});
+    document.getElementById('uf').addEventListener('submit',function(e){
+      e.preventDefault();var v=document.getElementById('utr').value.replace(/\D/g,'');
+      if(!/^\d{12}$/.test(v)){document.querySelector('[data-err="utr"]').textContent='A UTR is 12 digits. Check your UPI app.';return}
+      r.utr=v;r.utrBad=false;r.status='paid_pending';save();route();
+    });
+  }else if(st==='paid_pending'){
+    shell(app,r,'<div class="status"><h2><span class="pulse"></span>Payment submitted</h2><p>The host is matching UTR '+esc(r.utr)+' with the account. Your pass opens here as soon as it’s verified.</p></div><p class="note">You can close this page. You’ll also get a WhatsApp message.</p>');
+  }else if(st==='confirmed'){
+    viewTicket(app,r);
+  }
+}
+
+function viewLocked(app,r){
+  var asked=r.switchReq===device();
+  shell(app,r,
+    '<div class="status"><h2><span class="dot" style="background:var(--red)"></span>This pass is locked</h2><p>It opens only on the phone it was requested from.</p></div>'+
+    (asked?'<p class="note">Switch requested. The host will confirm it’s you on WhatsApp, then your pass opens on this phone.</p>':
+    '<p class="lede">Changed phones? Ask for a switch. The host confirms it’s you before moving the pass here.</p><button class="btn" id="sw">Request a device switch</button>'));
+  var b=document.getElementById('sw');
+  if(b)b.addEventListener('click',function(){r.switchReq=device();save();route();toast('Switch requested')});
+}
+
+function watermark(r){
+  var ink=getComputedStyle(document.documentElement).getPropertyValue('--ink').trim()||'#888';
+  var t=esc(r.name.toUpperCase()+'   '+maskPhone(r.phone)+'   '+r.id);
+  var svg="<svg xmlns='http://www.w3.org/2000/svg' width='360' height='150'><text x='10' y='85' transform='rotate(-20 180 75)' font-family='Montserrat,Arial,sans-serif' font-size='12' font-weight='600' letter-spacing='2' fill='"+ink+"' fill-opacity='.13'>"+t+"</text></svg>";
+  return "url('data:image/svg+xml,"+encodeURIComponent(svg).replace(/'/g,'%27')+"')";
+}
+
+function viewTicket(app,r){
+  var s=S.settings;
+  var venue=s.venue?'<div class="venue"><h3>Venue</h3><p>'+esc(s.venue)+'</p>'+(s.map?'<p style="margin-top:10px"><a class="btn ghost sm" href="'+esc(s.map)+'" target="_blank" rel="noopener">Open in Maps</a></p>':'')+'</div>':
+    '<div class="venue"><h3>Venue</h3><p>Drops in the WhatsApp group.</p></div>';
+  shell(app,r,
+    '<div class="pass" id="pass"><div class="wm" style="background-image:'+watermark(r)+'"></div><div class="pass-in">'+
+      '<div class="pass-top">'+mini()+'<span class="caps tiny" style="letter-spacing:.3em">Chapter 1.0</span></div>'+
+      '<p class="pass-name">'+esc(r.name)+'</p>'+
+      '<p class="pass-meta">'+EVENT_DATE+'. Doors and details in the group.</p>'+
+      '<div class="pass-code"><div class="qrbox" id="pqr"></div><div>'+
+        '<div class="code" id="code" aria-live="polite">000 000</div>'+
+        '<div class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="var(--line-strong)"/><circle id="ring" cx="12" cy="12" r="9" stroke="var(--red)" stroke-dasharray="56.55" stroke-dashoffset="0"/></svg><span id="secs">30s</span></div>'+
+        '<p class="tiny" style="margin:0">Show this at the door. The code refreshes every 30 seconds, so a screenshot won’t work.</p>'+
+      '</div></div>'+
+      venue+
+      '<a class="btn red block" href="'+esc(s.group)+'" target="_blank" rel="noopener">Join the WhatsApp group</a>'+
+      '<p class="tiny" style="margin:12px 0 0">Joins are approved one by one against the guest list, so the invite only works for you.</p>'+
+    '</div></div>');
+  var lastW=-1, qel=document.getElementById('pqr');
+  function tick(){
+    var w=win(), left=30-Math.floor((Date.now()%30000)/1000);
+    if(w!==lastW){lastW=w;var c=codeAt(r,w);document.getElementById('code').textContent=fmtCode(c);qr(qel,'HOOLE|'+r.id+'|'+c,132,'Show the entry code at the door.')}
+    document.getElementById('secs').textContent=left+'s';
+    document.getElementById('ring').setAttribute('stroke-dashoffset',String(56.55*(1-left/30)));
+  }
+  tick(); timers.push(setInterval(tick,1000));
+}
+
+function copy(text,msg){
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){toast(msg)},function(){toast('Copy blocked. Select the text manually.')})}
+  else toast('Copy blocked. Select the text manually.');
+}
+
+/* ---------- admin ---------- */
+var adminTab='requests', adminFilter='review', doorResult='';
+var LABEL={review:'To review',accepted:'Awaiting payment',paid_pending:'Check payment',confirmed:'Confirmed',waitlist:'Waitlist',rejected:'Rejected'};
+function viewAdmin(app){
+  var s=S.settings;
+  if(ss.get(ADMINKEY)!=='1'){
+    app.innerHTML='<main class="page"><div class="topbar">'+mini()+'<a class="back" href="#/">Guest site</a></div><h1 class="h-page">Host console</h1><p class="lede">Enter your host PIN.</p>'+
+      '<form class="form" id="pf" novalidate><div class="f full"><label for="pin">PIN</label><input id="pin" type="password" inputmode="numeric" autocomplete="off"><div class="err" data-err="pin"></div></div><div class="submit-row"><button class="btn block" type="submit">Unlock</button></div></form></main>';
+    document.getElementById('pf').addEventListener('submit',function(e){e.preventDefault();if(document.getElementById('pin').value===String(s.pin)){ss.set(ADMINKEY,'1');route()}else document.querySelector('[data-err="pin"]').textContent='That PIN isn’t right.'});
+    document.getElementById('pin').focus();
+    return;
+  }
+  var L=list(), cnt=function(st){return L.filter(function(r){return r.status===st}).length};
+  var conf=cnt('confirmed');
+  var body='';
+  if(adminTab==='requests')body=adminRequests(L);
+  else if(adminTab==='door')body=adminDoor(L);
+  else body=adminSettings();
+  app.innerHTML='<main class="admin"><div class="topbar">'+mini()+'<div style="display:flex;gap:10px;align-items:center"><span class="back">Host console</span><button class="btn ghost sm" id="lock">Lock</button></div></div>'+
+    '<div class="stats">'+
+      '<div class="stat"><b>'+L.length+'</b><span>Requests</span></div>'+
+      '<div class="stat"><b>'+cnt('review')+'</b><span>To review</span></div>'+
+      '<div class="stat"><b>'+cnt('paid_pending')+'</b><span>Payments to check</span></div>'+
+      '<div class="stat"><b>'+conf+' / '+esc(s.capacity)+'</b><span>Confirmed of capacity</span></div>'+
+    '</div>'+
+    '<div class="tabs" role="tablist">'+
+      ['requests','door','settings'].map(function(t){return '<button role="tab" data-tab="'+t+'" aria-selected="'+(adminTab===t)+'">'+({requests:'Requests',door:'Door check',settings:'Settings'})[t]+'</button>'}).join('')+
+    '</div>'+body+'</main>';
+  document.getElementById('lock').addEventListener('click',function(){ss.del(ADMINKEY);route()});
+  app.querySelectorAll('[data-tab]').forEach(function(b){b.addEventListener('click',function(){adminTab=b.dataset.tab;doorResult='';route()})});
+  wireAdmin(app);
+}
+
+function adminRequests(L){
+  var filters=['review','paid_pending','accepted','confirmed','waitlist','rejected','all'];
+  var chips='<div class="chips">'+filters.map(function(f){var n=f==='all'?L.length:L.filter(function(r){return r.status===f}).length;return '<button data-filter="'+f+'" aria-pressed="'+(adminFilter===f)+'">'+(f==='all'?'All':LABEL[f])+' ('+n+')</button>'}).join('')+'</div>';
+  var sw=L.filter(function(r){return r.switchReq});
+  var swBox=sw.length?'<div class="warnbox">'+sw.length+' device switch request'+(sw.length>1?'s':'')+' waiting. Confirm with the guest on WhatsApp before approving.</div>':'';
+  var rows=L.filter(function(r){return adminFilter==='all'||r.status===adminFilter||(r.switchReq&&adminFilter==='all')});
+  if(!L.length)return chips+'<div class="empty"><p>No requests yet. Share the page to start receiving them.</p><button class="btn ghost sm" data-act="sample">Load sample requests</button></div>';
+  if(!rows.length)return swBox+chips+'<div class="empty">Nothing in '+(LABEL[adminFilter]||'this list').toLowerCase()+'.</div>';
+  return swBox+chips+rows.map(reqCard).join('');
+}
+function reqCard(r){
+  var s=S.settings, a=[];
+  function b(act,label,cls){a.push('<button class="btn sm '+(cls||'ghost')+'" data-act="'+act+'" data-id="'+r.id+'">'+label+'</button>')}
+  function wa(text,label){a.push('<a class="btn sm ghost" href="'+esc(waLink(r.phone,text))+'" target="_blank" rel="noopener">'+label+'</a>')}
+  if(r.status==='review'){b('accept','Accept','');b('waitlist','Waitlist');b('reject','Reject')}
+  if(r.status==='waitlist'){b('accept','Accept','');b('reject','Reject')}
+  if(r.status==='accepted'){wa('Hi '+first(r.name)+', your request for H∞LE Chapter 1.0 is accepted. Confirm your spot here: '+passUrl(r)+' (open it on the phone you applied from).','Send acceptance on WhatsApp');b('review','Move back to review')}
+  if(r.status==='paid_pending'){b('verify','Payment received','');b('nopay','Payment not found')}
+  if(r.status==='confirmed'){wa('You’re in, '+first(r.name)+'. Your H∞LE pass and the group invite are live here: '+passUrl(r),'Send pass on WhatsApp')}
+  if(r.status==='rejected'){b('review','Move back to review')}
+  return '<article class="req"><div class="req-head"><div><h3>'+esc(r.name)+'</h3>'+
+    '<p class="meta">'+esc(r.age)+', '+esc(r.gender)+'. '+esc(r.profession)+', '+esc(r.city)+'</p>'+
+    '<p class="meta">+91 '+esc(r.phone)+'. <a href="https://instagram.com/'+encodeURIComponent(r.insta)+'" target="_blank" rel="noopener">@'+esc(r.insta)+'</a>'+(r.ref?'. Referred by '+esc(r.ref):'')+'</p></div>'+
+    '<span class="tag '+r.status+'">'+LABEL[r.status]+'</span></div>'+
+    '<q>'+esc(r.why)+'</q>'+
+    (r.status==='paid_pending'?'<p class="flag">UTR <b>'+esc(r.utr)+'</b>. Look for '+money(s.price)+' with note HOOLE-'+esc(r.id)+'.</p>':'')+
+    (r.utrBad&&r.status==='accepted'?'<p class="flag">Last UTR '+esc(r.utr)+' didn’t match. Guest has been asked to re-enter it.</p>':'')+
+    (r.switchReq?'<p class="flag">Wants to open the pass on a new phone. <button class="btn sm ghost" data-act="switch" data-id="'+r.id+'" style="margin-left:8px">Approve switch</button> <button class="btn sm ghost" data-act="noswitch" data-id="'+r.id+'">Decline</button></p>':'')+
+    (r.checkedIn?'<p class="flag">Checked in at '+new Date(r.checkedIn).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'})+'</p>':'')+
+    (a.length?'<div class="actions">'+a.join('')+'</div>':'')+'</article>';
+}
+
+function adminDoor(L){
+  var conf=L.filter(function(r){return r.status==='confirmed'}), inn=conf.filter(function(r){return r.checkedIn}).length;
+  var guest=conf.map(function(r){return r.name+'  +91 '+r.phone}).join('\n');
+  return '<p class="lede" style="margin-bottom:18px">Type the 6-digit code from the guest’s pass. Each pass gets in once. '+inn+' of '+conf.length+' guests are inside.</p>'+
+    '<form class="door" id="df" novalidate><input id="dc" inputmode="numeric" maxlength="7" placeholder="000000" aria-label="Entry code" autocomplete="off"><button class="btn red" type="submit">Check code</button></form>'+
+    doorResult+
+    '<p class="sec-title caps" style="margin-top:40px">Guest list for WhatsApp approvals</p>'+
+    '<p class="tiny">Turn on “Approve new participants” in the group settings, then approve only the names below. Anyone else who gets the link stays outside.</p>'+
+    '<textarea class="list-box" readonly aria-label="Confirmed guest list">'+esc(guest||'No confirmed guests yet.')+'</textarea>';
+}
+
+function adminSettings(){
+  var s=S.settings;
+  function fi(k,label,hint,type){return '<div class="f'+(k==='group'||k==='venue'||k==='map'||k==='site'?' full':'')+'"><label for="s_'+k+'">'+label+'</label><input id="s_'+k+'" name="'+k+'" value="'+esc(s[k])+'"'+(type?' inputmode="'+type+'"':'')+'>'+(hint?'<p class="tiny" style="margin:0">'+hint+'</p>':'')+'</div>'}
+  return '<form class="form" id="sf" novalidate>'+
+    fi('price','Access price (₹)','','numeric')+fi('capacity','Capacity','','numeric')+
+    fi('upi','UPI ID','Where guests pay.')+fi('payee','Payee name','Shown in the guest’s UPI app.')+
+    fi('group','WhatsApp group invite link','Shown only on confirmed passes, never as text.')+
+    fi('venue','Venue (optional)','Leave empty to share it only in the group. Filled in, it appears on every confirmed pass.')+
+    fi('map','Google Maps link (optional)','')+
+    fi('minAge','Minimum age','','numeric')+fi('pin','Host PIN','At least 4 digits.','numeric')+
+    fi('site','Site address','Used in WhatsApp messages to build each guest’s pass link.')+
+    '<div class="submit-row"><button class="btn red" type="submit">Save settings</button></div></form>';
+}
+
+function wireAdmin(app){
+  app.querySelectorAll('[data-filter]').forEach(function(b){b.addEventListener('click',function(){adminFilter=b.dataset.filter;route()})});
+  app.querySelectorAll('[data-act]').forEach(function(b){b.addEventListener('click',function(){act(b.dataset.act,b.dataset.id)})});
+  var df=document.getElementById('df');
+  if(df){var dc=document.getElementById('dc');dc.focus();df.addEventListener('submit',function(e){e.preventDefault();doorCheck(dc.value.replace(/\D/g,''))})}
+  var sf=document.getElementById('sf');
+  if(sf)sf.addEventListener('submit',function(e){
+    e.preventDefault();var d={};new FormData(sf).forEach(function(v,k){d[k]=String(v).trim()});
+    if(!/^\d{4,8}$/.test(d.pin)){toast('PIN must be 4 to 8 digits');return}
+    ['price','capacity','minAge'].forEach(function(k){var n=parseInt(d[k],10);d[k]=isNaN(n)||n<0?DEFAULTS[k]:n});
+    Object.assign(S.settings,d);save();toast('Settings saved');route();
+  });
+}
+
+function act(a,id){
+  if(a==='sample'){loadSample();return}
+  var r=S.requests[id];if(!r)return;
+  if(a==='accept'){if(held()>=Number(S.settings.capacity))toast('Over capacity. Accepted anyway.');else toast('Accepted. Send the WhatsApp message next.');r.status='accepted';r.utrBad=false;adminFilter='accepted'}
+  else if(a==='reject'){r.status='rejected';toast('Rejected')}
+  else if(a==='waitlist'){r.status='waitlist';toast('Moved to waitlist')}
+  else if(a==='review'){r.status='review';toast('Moved back to review')}
+  else if(a==='verify'){r.status='confirmed';r.utrBad=false;toast('Payment received. Pass is live.');adminFilter='confirmed'}
+  else if(a==='nopay'){r.status='accepted';r.utrBad=true;toast('Guest will be asked to re-enter the UTR')}
+  else if(a==='switch'){r.device=r.switchReq;r.switchReq=null;toast('Pass moved to the new phone')}
+  else if(a==='noswitch'){r.switchReq=null;toast('Switch declined')}
+  save();route();
+}
+
+function doorCheck(code){
+  if(code.length!==6){doorResult='<div class="verdict bad"><h3>Enter 6 digits</h3><p>The code is on the guest’s pass, under their name.</p></div>';route();return}
+  var w=win(), hit=null;
+  list().forEach(function(r){if(r.status==='confirmed'&&(codeAt(r,w)===code||codeAt(r,w-1)===code))hit=r});
+  if(!hit)doorResult='<div class="verdict bad"><h3>Not valid</h3><p>No live pass has this code. Ask the guest to show the pass on their own phone.</p></div>';
+  else if(hit.checkedIn)doorResult='<div class="verdict warn"><h3>Already inside</h3><p>'+esc(hit.name)+' checked in at '+new Date(hit.checkedIn).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'})+'. This pass can’t be used twice.</p></div>';
+  else{hit.checkedIn=Date.now();save();doorResult='<div class="verdict ok"><h3>Let in</h3><p>'+esc(hit.name)+', '+esc(hit.age)+'. '+maskPhone(hit.phone)+'. Match the name to their ID.</p></div>'}
+  route();
+}
+
+function loadSample(){
+  var now=Date.now(), samples=[
+    ['Aanya Kapoor','9810000001','Gurugram','Woman',26,'Architect','aanya.k','Meher','Long techno sets that run past sunrise are the only place I feel completely present.','review'],
+    ['Rohan Mehta','9810000002','Delhi','Man',29,'Product designer','rohan.mhta','','I’ve been chasing rooms where nobody films and everybody listens. This sounds like one.','review'],
+    ['Ishita Rao','9810000003','Noida','Woman',24,'Music producer','ishita.wav','Kabir','I produce deep house and want to be around people who hear the details.','paid_pending'],
+    ['Kabir Sethi','9810000004','Delhi','Man',31,'Chef','kabir.cooks','','Music is the reason I stay up after service. I want a crowd that feels the same.','confirmed'],
+    ['Meher Gill','9810000005','Gurugram','Woman',27,'Lawyer','meher.g','','Tired of clubs that feel like waiting rooms. I want the loop.','waitlist']
+  ];
+  samples.forEach(function(x,i){
+    if(list().some(function(r){return r.phone===x[1]}))return;
+    var id;do{id=rid(6)}while(S.requests[id]);
+    S.requests[id]={id:id,name:x[0],phone:x[1],city:x[2],gender:x[3],age:x[4],profession:x[5],insta:x[6],ref:x[7],why:x[8],status:x[9],created:now-i*3600000,device:'dev-sample-'+i,secret:rid(16),utr:x[9]==='paid_pending'?'418273645129':'',utrBad:false,switchReq:null,checkedIn:null};
+  });
+  adminFilter='all';save();toast('Sample requests added');route();
+}
+
+/* ---------- prototype controls ---------- */
+var demoOpen=false;
+function renderDemo(){
+  var d=document.getElementById('demo');
+  d.innerHTML=(demoOpen?'<div class="demo-panel" id="dp"><p>Prototype controls. Guests and host share this browser here; the live version runs them on separate phones. Host PIN: <b>'+esc(S.settings.pin)+'</b></p>'+
+    '<button data-d="guest">Guest site</button>'+
+    (myReq()?'<button data-d="mine">My pass</button>':'')+
+    '<button data-d="admin">Host console</button>'+
+    '<button data-d="device">Pretend to be another phone</button>'+
+    '<button data-d="sample">Load sample requests</button>'+
+    '<button data-d="reset">Reset everything</button></div>':'')+
+    '<button class="demo-toggle" id="dt" aria-expanded="'+demoOpen+'">'+(demoOpen?'Close':'Prototype')+'</button>';
+  document.getElementById('dt').addEventListener('click',function(){demoOpen=!demoOpen;renderDemo()});
+  d.querySelectorAll('[data-d]').forEach(function(b){b.addEventListener('click',function(){
+    var k=b.dataset.d;demoOpen=false;
+    if(k==='guest')go('/');
+    else if(k==='mine'){var m=myReq();if(m)go('/p/'+m.id)}
+    else if(k==='admin')go('/admin');
+    else if(k==='device'){ls.set(DEVKEY,'dev-'+rid(12));toast('You’re now a different phone');route()}
+    else if(k==='sample'){loadSample();go('/admin')}
+    else if(k==='reset'){ls.del(KEY);ls.del(MINEKEY);ls.del(DEVKEY);ss.del(ADMINKEY);S=load();adminTab='requests';adminFilter='review';doorResult='';toast('Everything reset');go('/')}
+  })});
+}
+
+route();
+})();
+</script>
+</body>
+</html>

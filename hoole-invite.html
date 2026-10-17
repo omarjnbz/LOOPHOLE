@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>H∞LE Chapter 1.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#04070a; --bg-2:#071017; --surface:#0b141b; --surface-2:#101c25;
+  --line:rgba(196,220,240,.13); --line-strong:rgba(196,220,240,.3);
+  --text:#e9eff4; --muted:#95a3ae; --faint:#5e6c77;
+  --glow:#d6e7ff; --red:#e3262d; --ember:#ff5b3d; --ok:#7fd8b0; --warn:#f1c27d; --bad:#ff8a80;
+  color-scheme:dark;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ color-scheme:dark; } }
+:root[data-theme="dark"]{ color-scheme:dark; }
+html{ scroll-padding-top:env(safe-area-inset-top,0px); background:var(--bg); }
+*,*::before,*::after{ box-sizing:inherit; }
+body{ margin:0; background:var(--bg); color:var(--text); font-family:'Montserrat',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif; font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased; }
+a{ color:inherit; }
+img,svg{ max-width:100%; }
+:focus-visible{ outline:2px solid var(--glow); outline-offset:3px; }
+.wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+.muted{ color:var(--muted); }
+.sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+
+/* logo */
+.logo{ display:inline-flex; align-items:center; gap:.16em; font-weight:300; letter-spacing:.1em; line-height:1; color:var(--text); text-decoration:none; }
+.logo .inf{ width:1.6em; height:auto; color:var(--red); filter:drop-shadow(0 0 .1em rgba(227,38,45,.5)); margin:0 .04em; }
+.logo-sm{ font-size:22px; }
+.logo-md{ font-size:30px; }
+
+/* buttons */
+.btn{ display:inline-flex; align-items:center; justify-content:center; gap:10px; min-height:50px; padding:0 30px; font:600 12px/1 'Montserrat',system-ui,sans-serif; letter-spacing:.24em; text-transform:uppercase; border-radius:2px; border:1px solid transparent; cursor:pointer; text-decoration:none; transition:box-shadow .25s, background .25s, border-color .25s; }
+.btn-primary{ background:var(--text); color:var(--bg); }
+.btn-primary:hover{ box-shadow:0 0 34px rgba(214,231,255,.35); }
+.btn-ghost{ background:transparent; color:var(--text); border-color:var(--line-strong); }
+.btn-ghost:hover{ border-color:var(--glow); }
+.btn-ok{ background:var(--ok); color:#03130c; }
+.btn-danger{ background:transparent; color:var(--bad); border-color:rgba(255,138,128,.35); }
+.btn-sm{ min-height:38px; padding:0 14px; font-size:10.5px; letter-spacing:.14em; }
+.btn[disabled]{ opacity:.4; cursor:not-allowed; }
+
+/* hero */
+.hero{ position:relative; text-align:center; overflow:hidden; }
+.hero-art{ position:relative; height:clamp(360px,62svh,700px); }
+.hero-art svg{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+.hero-art::after{ content:""; position:absolute; inset:auto 0 0; height:30%; background:linear-gradient(rgba(4,7,10,0),var(--bg)); }
+.chapter{ position:absolute; right:clamp(16px,5vw,64px); top:18%; writing-mode:vertical-rl; transform:rotate(180deg); font-size:13px; font-weight:600; letter-spacing:.5em; text-transform:uppercase; color:var(--muted); }
+.hero-tag{ position:absolute; left:clamp(16px,5vw,64px); top:clamp(24px,6svh,56px); text-align:left; font-size:12px; font-weight:500; letter-spacing:.28em; text-transform:uppercase; color:var(--muted); line-height:2; padding-left:14px; border-left:1px solid var(--line-strong); }
+.hero-content{ position:relative; margin-top:clamp(-120px,-12svh,-60px); padding:0 20px 88px; }
+.hero-logo{ margin:0; font-size:clamp(64px,13vw,150px); font-weight:300; }
+.hero-logo .logo{ letter-spacing:.14em; }
+.hero-line{ max-width:28ch; margin:22px auto 0; font-size:clamp(14px,1.6vw,17px); letter-spacing:.16em; text-transform:uppercase; line-height:1.9; color:var(--text); }
+.hero-date{ margin:30px auto 36px; display:grid; gap:6px; }
+.hero-date::before{ content:""; width:28px; height:1px; background:var(--line-strong); margin:0 auto 22px; }
+.hero-date strong{ font-size:clamp(15px,2vw,21px); letter-spacing:.32em; font-weight:600; text-transform:uppercase; }
+.hero-date span{ font-size:13px; letter-spacing:.3em; text-transform:uppercase; color:var(--muted); }
+.hero-note{ margin:18px 0 0; font-size:13px; color:var(--faint); }
+.ring{ stroke-dasharray:1000; stroke-dashoffset:1000; animation:draw 2.8s cubic-bezier(.6,.05,.25,1) .25s forwards; }
+@keyframes draw{ to{ stroke-dashoffset:0; } }
+@media (prefers-reduced-motion:reduce){ .ring{ animation:none; stroke-dashoffset:0; } }
+
+/* landing sections */
+section{ padding:88px 0; }
+.display{ margin:0; font-size:clamp(28px,4.4vw,50px); font-weight:600; line-height:1.12; letter-spacing:.06em; text-transform:uppercase; }
+.display .dim{ display:block; color:#8b979f; font-weight:500; margin-top:.25em; }
+.about{ display:grid; grid-template-columns:1.15fr 1fr; gap:56px; align-items:start; border-top:1px solid var(--line); }
+.about-body .lead{ margin:0 0 28px; font-size:17px; line-height:1.75; color:#c9d3db; max-width:52ch; }
+.nolist{ list-style:none; margin:0 0 26px; padding:0; font-size:14px; letter-spacing:.2em; text-transform:uppercase; line-height:2.1; }
+.loopline{ margin:0; font-size:14px; letter-spacing:.2em; text-transform:uppercase; line-height:2.1; }
+.loopline em{ font-style:normal; font-weight:700; color:var(--ember); }
+.section-title{ margin:0 0 40px; font-size:14px; font-weight:600; letter-spacing:.3em; text-transform:uppercase; color:var(--muted); }
+.inside-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:0; }
+.inside-item{ padding:4px 24px 4px 20px; border-left:1px solid var(--line-strong); }
+.inside-item h3{ margin:0 0 12px; font-size:15px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; line-height:1.4; }
+.inside-item p{ margin:0; color:var(--muted); font-size:15px; }
+.steps{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(4,1fr); gap:28px; counter-reset:s; }
+.steps li{ counter-increment:s; position:relative; padding-top:56px; }
+.steps li::before{ content:counter(s); position:absolute; top:0; left:0; font-size:40px; font-weight:300; line-height:1; color:var(--glow); }
+.steps li::after{ content:""; position:absolute; top:20px; left:44px; right:-14px; height:1px; background:var(--line); }
+.steps li:last-child::after{ display:none; }
+.steps h3{ margin:0 0 10px; font-size:15px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; }
+.steps p{ margin:0; color:var(--muted); font-size:15px; }
+.strip{ padding:0; border-top:1px solid var(--line-strong); border-bottom:1px solid var(--line-strong); }
+.strip-row{ display:flex; flex-wrap:wrap; justify-content:center; gap:10px 0; padding-top:18px; padding-bottom:18px; font-size:12px; font-weight:600; letter-spacing:.22em; text-transform:uppercase; }
+.strip-row span+span::before{ content:"|"; margin:0 18px; color:var(--faint); font-weight:400; }
+.cta{ text-align:center; }
+.cta .display{ max-width:18ch; margin:0 auto 40px; }
+.cta-kicker{ margin:0 0 20px; color:var(--muted); font-size:15px; }
+.foot{ display:flex; flex-wrap:wrap; gap:14px 24px; align-items:center; justify-content:space-between; padding-top:28px; padding-bottom:40px; border-top:1px solid var(--line); color:var(--faint); font-size:13px; }
+
+/* pages */
+.page{ min-height:100%; padding:40px 20px 96px; }
+.page-inner{ max-width:620px; margin:0 auto; }
+.mini-home{ display:inline-block; margin-bottom:40px; text-decoration:none; }
+.page-title{ margin:0 0 10px; font-size:clamp(26px,4vw,36px); font-weight:600; letter-spacing:.08em; text-transform:uppercase; line-height:1.15; }
+.page-sub{ margin:0 0 36px; color:var(--muted); }
+.grid2{ display:grid; grid-template-columns:1fr 1fr; gap:0 18px; }
+.field{ margin-bottom:22px; }
+.field label{ display:block; margin-bottom:8px; font-size:14px; font-weight:500; color:#c9d3db; }
+.field label small{ color:var(--faint); font-weight:400; }
+.input, .field input[type=text], .field input[type=tel], .field input[type=number], .field input[type=url], .field input[type=password], .field input[type=datetime-local], .field select, .field textarea{
+  width:100%; min-height:50px; padding:12px 14px; background:var(--bg-2); color:var(--text); border:1px solid var(--line-strong); border-radius:2px; font:400 16px/1.4 'Montserrat',system-ui,sans-serif; }
+.field textarea{ min-height:96px; resize:vertical; }
+.field select{ appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2395a3ae' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; padding-right:38px; }
+.field input:focus, .field select:focus, .field textarea:focus{ outline:none; border-color:var(--glow); box-shadow:0 0 0 3px rgba(214,231,255,.12); }
+.field.has-err input, .field.has-err select{ border-color:var(--bad); }
+.phone{ display:flex; }
+.phone span{ display:flex; align-items:center; padding:0 14px; border:1px solid var(--line-strong); border-right:0; background:var(--surface); color:var(--muted); border-radius:2px 0 0 2px; }
+.phone input{ border-radius:0 2px 2px 0 !important; }
+.hint{ margin:7px 0 0; font-size:13px; color:var(--faint); }
+.err{ margin:6px 0 0; font-size:13px; color:var(--bad); min-height:0; }
+.err:empty{ display:none; }
+.counter{ float:right; font-size:12px; color:var(--faint); }
+.check{ display:flex; gap:12px; align-items:flex-start; font-size:14px; color:#c9d3db; cursor:pointer; }
+.check input{ width:20px; height:20px; margin-top:2px; accent-color:var(--glow); flex:none; }
+.form-actions{ margin-top:30px; display:flex; flex-wrap:wrap; gap:14px; align-items:center; }
+
+/* status */
+.hello{ margin:0 0 6px; color:var(--muted); font-size:15px; }
+.track{ list-style:none; display:grid; grid-template-columns:repeat(4,1fr); margin:28px 0 32px; padding:0; gap:6px; }
+.track li{ padding-top:12px; border-top:2px solid var(--line); font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); }
+.track li.done{ border-color:var(--glow); color:var(--muted); }
+.track li.now{ border-color:var(--glow); color:var(--text); font-weight:600; }
+.track li.stop{ border-color:var(--bad); color:var(--bad); }
+.status-box{ display:flex; gap:16px; align-items:flex-start; padding:22px; border:1px solid var(--line-strong); background:var(--surface); border-radius:2px; }
+.status-box h2{ margin:0 0 6px; font-size:19px; font-weight:600; letter-spacing:.04em; }
+.status-box p{ margin:0; color:var(--muted); }
+.dot{ flex:none; width:10px; height:10px; margin-top:8px; border-radius:50%; background:var(--glow); }
+.dot.pulse{ animation:pulse 2s ease-in-out infinite; }
+.dot.ok{ background:var(--ok); } .dot.warn{ background:var(--warn); } .dot.bad{ background:var(--bad); }
+@keyframes pulse{ 50%{ box-shadow:0 0 0 7px rgba(214,231,255,.12); } }
+@media (prefers-reduced-motion:reduce){ .dot.pulse{ animation:none; } }
+.linkbox{ margin-top:22px; }
+.linkbox label{ display:block; font-size:14px; font-weight:500; color:#c9d3db; margin-bottom:8px; }
+.linkrow{ display:flex; gap:8px; }
+.linkrow input{ flex:1; min-width:0; min-height:44px; padding:0 12px; background:var(--bg-2); color:var(--muted); border:1px solid var(--line); border-radius:2px; font:400 14px 'Montserrat',system-ui,sans-serif; }
+.next{ margin-top:30px; padding-top:26px; border-top:1px solid var(--line); }
+.next h3{ margin:0 0 14px; font-size:14px; font-weight:600; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); }
+.next ol{ margin:0; padding-left:20px; color:#c9d3db; }
+.next li{ margin-bottom:8px; padding-left:4px; }
+.notice{ margin-top:18px; padding:14px 16px; border-left:2px solid var(--bad); background:rgba(255,138,128,.07); color:#ffd2cc; font-size:14px; }
+.pay{ display:grid; grid-template-columns:auto 1fr; gap:28px; align-items:center; margin-top:24px; padding:24px; border:1px solid var(--line-strong); border-radius:2px; }
+.qr{ width:188px; height:188px; padding:10px; background:#fff; border-radius:2px; display:grid; place-items:center; }
+.qr img, .qr canvas{ display:block; width:168px !important; height:168px !important; }
+.amount{ margin:0; font-size:40px; font-weight:300; line-height:1; letter-spacing:.02em; }
+.upi-row{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:18px 0 14px; }
+.upi-row code{ padding:8px 10px; border:1px dashed var(--line-strong); font:500 14px 'Montserrat',system-ui,sans-serif; color:var(--text); word-break:break-all; }
+.pay-form{ margin-top:26px; }
+
+/* pass */
+.pass{ position:relative; margin-top:8px; padding:28px; border:1px solid var(--line-strong); border-radius:2px; overflow:hidden; background:radial-gradient(120% 90% at 50% 0%, rgba(125,151,176,.22), rgba(4,7,10,0) 60%), var(--surface); }
+.pass::before{ content:""; position:absolute; left:-10%; right:-10%; top:46%; height:70px; border:1.5px solid rgba(214,231,255,.55); border-radius:50%; transform:rotate(-5deg); box-shadow:0 0 18px rgba(214,231,255,.25); pointer-events:none; }
+.pass-head{ position:relative; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.pass-head span{ font-size:11px; letter-spacing:.32em; text-transform:uppercase; color:var(--muted); }
+.pass-name{ position:relative; margin:44px 0 30px; font-size:clamp(24px,5vw,34px); font-weight:600; letter-spacing:.08em; text-transform:uppercase; line-height:1.15; }
+.pass-meta{ position:relative; display:grid; grid-template-columns:repeat(3,auto); justify-content:space-between; gap:16px; padding-top:20px; border-top:1px dashed var(--line-strong); }
+.pass-meta span{ display:block; font-size:12px; color:var(--faint); margin-bottom:4px; }
+.pass-meta strong{ font-size:15px; font-weight:600; letter-spacing:.06em; }
+.countdown{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:22px; text-align:center; }
+.countdown div{ padding:14px 4px; border:1px solid var(--line); border-radius:2px; }
+.countdown b{ display:block; font-size:26px; font-weight:300; line-height:1.1; }
+.countdown span{ font-size:11px; color:var(--faint); letter-spacing:.14em; text-transform:uppercase; }
+.location{ margin-top:22px; padding:24px; border:1px solid var(--line-strong); border-radius:2px; }
+.location h2{ margin:0 0 10px; font-size:14px; font-weight:600; letter-spacing:.22em; text-transform:uppercase; color:var(--muted); }
+.location .addr{ margin:0 0 6px; font-size:20px; line-height:1.4; }
+.location .loc-notes{ margin:0 0 20px; color:var(--muted); }
+.location.live{ border-color:rgba(214,231,255,.55); box-shadow:0 0 40px rgba(214,231,255,.08) inset; }
+.fine{ margin:22px 0 0; font-size:13px; color:var(--faint); }
+
+/* admin */
+body[data-mode=admin]{ background:var(--bg-2); }
+.admin{ max-width:1180px; margin:0 auto; padding:24px 20px 96px; }
+.admin-bar{ display:flex; flex-wrap:wrap; gap:14px; align-items:center; justify-content:space-between; padding-bottom:20px; margin-bottom:28px; border-bottom:1px solid var(--line); }
+.admin-bar .left{ display:flex; gap:14px; align-items:center; }
+.admin-bar .tag{ font-size:12px; letter-spacing:.24em; text-transform:uppercase; color:var(--muted); }
+.admin-bar .right{ display:flex; gap:8px; flex-wrap:wrap; }
+.stats{ display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:28px; }
+.stat{ padding:18px; background:var(--surface); border:1px solid var(--line); border-radius:2px; }
+.stat b{ display:block; font-size:30px; font-weight:300; line-height:1.1; }
+.stat span{ font-size:13px; color:var(--muted); }
+.cap{ height:4px; background:var(--line); margin-top:12px; border-radius:2px; overflow:hidden; }
+.cap i{ display:block; height:100%; background:var(--glow); }
+.admin-grid{ display:grid; grid-template-columns:1fr 340px; gap:24px; align-items:start; }
+.tabs{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
+.tab{ padding:9px 14px; border:1px solid var(--line); background:transparent; color:var(--muted); border-radius:2px; font:500 13px 'Montserrat',system-ui,sans-serif; cursor:pointer; }
+.tab[aria-pressed=true]{ background:var(--text); color:var(--bg); border-color:var(--text); }
+.tab em{ font-style:normal; opacity:.7; margin-left:6px; }
+.req{ display:grid; grid-template-columns:1fr auto; gap:18px; padding:20px; margin-bottom:10px; background:var(--surface); border:1px solid var(--line); border-radius:2px; }
+.req h3{ margin:0 0 4px; font-size:17px; font-weight:600; }
+.req h3 small{ font-weight:400; color:var(--muted); font-size:14px; margin-left:6px; }
+.req-meta{ display:flex; flex-wrap:wrap; gap:4px 16px; margin:0 0 10px; font-size:14px; color:var(--muted); }
+.req-meta a{ color:var(--glow); }
+.req-why{ margin:0; font-size:15px; color:#d3dce3; }
+.req-extra{ margin:10px 0 0; font-size:13px; color:var(--warn); }
+.req-extra.okc{ color:var(--ok); }
+.req-actions{ display:flex; flex-direction:column; gap:8px; align-items:stretch; min-width:150px; }
+.badge{ display:inline-block; margin-left:8px; padding:2px 8px; font-size:11px; font-weight:600; letter-spacing:.06em; border:1px solid var(--line-strong); border-radius:2px; color:var(--muted); vertical-align:middle; }
+.empty{ padding:40px 20px; text-align:center; color:var(--muted); border:1px dashed var(--line-strong); border-radius:2px; }
+.admin-card{ padding:22px; margin-bottom:16px; background:var(--surface); border:1px solid var(--line); border-radius:2px; }
+.admin-card h2{ margin:0 0 6px; font-size:14px; font-weight:600; letter-spacing:.2em; text-transform:uppercase; }
+.admin-card > p{ margin:0 0 18px; color:var(--muted); font-size:14px; }
+.admin-card .field{ margin-bottom:16px; }
+.live-box{ margin-bottom:16px; padding:14px; border:1px solid rgba(127,216,176,.4); background:rgba(127,216,176,.06); font-size:14px; }
+.live-box strong{ color:var(--ok); }
+.gate{ max-width:400px; margin:12vh auto 0; padding:0 20px; }
+
+/* dock & toast */
+.dock{ position:fixed; right:16px; bottom:calc(16px + env(safe-area-inset-bottom,0px)); z-index:20; display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
+.dock-toggle{ padding:10px 16px; border-radius:2px; border:1px solid var(--line-strong); background:rgba(11,20,27,.92); color:var(--text); font:600 11px 'Montserrat',system-ui,sans-serif; letter-spacing:.18em; text-transform:uppercase; cursor:pointer; backdrop-filter:blur(8px); }
+.dock-menu{ width:260px; padding:14px; background:rgba(11,20,27,.97); border:1px solid var(--line-strong); border-radius:2px; display:grid; gap:6px; }
+.dock-menu[hidden]{ display:none; }
+.dock-menu a, .dock-menu button{ display:block; text-align:left; padding:9px 10px; border:0; background:transparent; color:var(--text); font:500 14px 'Montserrat',system-ui,sans-serif; text-decoration:none; border-radius:2px; cursor:pointer; }
+.dock-menu a:hover, .dock-menu button:hover{ background:var(--surface-2); }
+.dock-menu h4{ margin:8px 10px 2px; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--faint); font-weight:600; }
+.dock-menu p{ margin:6px 10px 0; font-size:12px; color:var(--faint); }
+.toast{ position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom,0px)); transform:translate(-50%,20px); opacity:0; z-index:30; padding:12px 18px; background:var(--text); color:var(--bg); font-size:14px; font-weight:500; border-radius:2px; transition:.25s; pointer-events:none; max-width:90vw; }
+.toast.show{ opacity:1; transform:translate(-50%,0); }
+
+@media (max-width:900px){
+  .about{ grid-template-columns:1fr; gap:32px; }
+  .inside-grid{ grid-template-columns:1fr 1fr; gap:32px 0; }
+  .steps{ grid-template-columns:1fr 1fr; gap:36px 28px; }
+  .steps li::after{ display:none; }
+  .stats{ grid-template-columns:repeat(2,1fr); }
+  .admin-grid{ grid-template-columns:1fr; }
+}
+@media (max-width:560px){
+  section{ padding:64px 0; }
+  .inside-grid, .steps{ grid-template-columns:1fr; }
+  .grid2{ grid-template-columns:1fr; }
+  .pay{ grid-template-columns:1fr; justify-items:center; text-align:center; }
+  .upi-row{ justify-content:center; }
+  .req{ grid-template-columns:1fr; }
+  .req-actions{ flex-direction:row; flex-wrap:wrap; }
+  .pass-meta{ grid-template-columns:1fr 1fr; }
+  .hero-tag{ display:none; }
+  .strip-row span+span::before{ margin:0 10px; }
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="dock" id="dock"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+(function(){
+'use strict';
+
+/* ---------- storage (prototype: this browser only) ---------- */
+const KEY='hoole-proto-v1';
+const DEFAULTS={
+  settings:{ price:1500, upiId:'yourname@okaxis', payee:'HOOLE Events', capacity:120, minAge:21, eventStart:'2026-10-23T21:00', adminPass:'loop2026' },
+  location:null, requests:[], mine:[]
+};
+let memory=null;
+const clone=o=>JSON.parse(JSON.stringify(o));
+function load(){
+  try{
+    const raw=localStorage.getItem(KEY);
+    if(raw){ const d=JSON.parse(raw); return Object.assign(clone(DEFAULTS), d, { settings:Object.assign({},DEFAULTS.settings,d.settings||{}) }); }
+  }catch(e){}
+  return memory?clone(memory):clone(DEFAULTS);
+}
+function save(d){ memory=clone(d); try{ localStorage.setItem(KEY,JSON.stringify(d)); }catch(e){} }
+let state=load();
+function commit(fn){ state=load(); fn(state); save(state); render(); }
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function rid(n){ const a='abcdefghjkmnpqrstuvwxyz23456789'; const b=new Uint8Array(n); crypto.getRandomValues(b); let s=''; for(const x of b) s+=a[x%a.length]; return s; }
+const inr=n=>'₹'+Number(n||0).toLocaleString('en-IN');
+const passLink=t=>location.href.split('#')[0]+'#/pass/'+t;
+const first=n=>String(n||'').trim().split(/\s+/)[0];
+function eventDate(){ const d=new Date(state.settings.eventStart+':00+05:30'); return isNaN(d)?new Date('2026-10-23T21:00:00+05:30'):d; }
+function fmtTime(ts){ return new Date(ts).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}); }
+function spotsTaken(s){ return s.requests.filter(r=>['accepted','payment_submitted','confirmed'].includes(r.status)).length; }
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),2400); }
+function copyText(text){
+  const done=()=>toast('Copied');
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done,()=>fallback()); } else fallback();
+  function fallback(){ const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); done(); }catch(e){ toast('Select the link and copy it manually'); } ta.remove(); }
+}
+function safeMaps(loc){
+  if(loc.maps && /^https:\/\//i.test(loc.maps)) return loc.maps;
+  return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(loc.addr);
+}
+
+const INF='<svg class="inf" viewBox="0 0 120 56" aria-hidden="true"><path d="M60 28C49 13 40 6 29 6 17 6 7 16 7 28s10 22 22 22c11 0 20-7 31-22s20-22 31-22c12 0 22 10 22 22s-10 22-22 22c-11 0-20-7-31-22z" fill="none" stroke="currentColor" stroke-width="7" stroke-linejoin="round"/></svg>';
+const logo=cls=>`<span class="logo ${cls||''}" role="img" aria-label="HOOLE"><span aria-hidden="true">H</span>${INF}<span aria-hidden="true">LE</span></span>`;
+
+const HERO_SVG=`<svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+<defs>
+ <radialGradient id="haze" cx="50%" cy="56%" r="58%"><stop offset="0" stop-color="#8aa3bb" stop-opacity=".5"/><stop offset=".42" stop-color="#2b3d4c" stop-opacity=".4"/><stop offset="1" stop-color="#04070a" stop-opacity="0"/></radialGradient>
+ <linearGradient id="pil" x1="0" x2="1"><stop offset="0" stop-color="#0a1319"/><stop offset=".55" stop-color="#18262f"/><stop offset="1" stop-color="#060c10"/></linearGradient>
+ <linearGradient id="pilfade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#04070a" stop-opacity=".9"/><stop offset=".5" stop-color="#04070a" stop-opacity="0"/></linearGradient>
+ <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".6" stop-color="#eef5ff"/><stop offset="1" stop-color="#fff" stop-opacity=".25"/></linearGradient>
+ <linearGradient id="ringg" x1="0" x2="1"><stop offset="0" stop-color="#cfe3ff" stop-opacity=".95"/><stop offset=".55" stop-color="#ffffff"/><stop offset="1" stop-color="#a9c2de" stop-opacity=".75"/></linearGradient>
+ <filter id="b8" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="8"/></filter>
+ <filter id="b14" x="-50%" y="-20%" width="200%" height="140%"><feGaussianBlur stdDeviation="14"/></filter>
+ <pattern id="h1" width="22" height="44" patternUnits="userSpaceOnUse"><circle cx="11" cy="12" r="9" fill="#020405"/><rect x="1" y="17" width="20" height="27" rx="8" fill="#020405"/></pattern>
+ <pattern id="h2" x="9" width="27" height="44" patternUnits="userSpaceOnUse"><circle cx="13" cy="15" r="11" fill="#020405"/><rect x="1" y="21" width="24" height="23" rx="9" fill="#020405"/></pattern>
+</defs>
+<rect width="1200" height="800" fill="#04070a"/>
+<rect width="1200" height="800" fill="url(#haze)"/>
+<g stroke="#a9c0d6" stroke-opacity=".07" fill="none" stroke-width="1.2">
+ <path d="M0 90 Q600 30 1200 110"/><path d="M0 135 Q600 80 1200 155"/><path d="M0 180 Q600 130 1200 200"/><path d="M0 225 Q600 182 1200 246"/><path d="M0 270 Q600 236 1200 292"/>
+ <path d="M150 0 L420 300"/><path d="M380 0 L520 300"/><path d="M820 0 L680 300"/><path d="M1060 0 L790 300"/>
+</g>
+<g opacity=".6">
+ <rect x="200" y="120" width="34" height="460" fill="url(#pil)"/><rect x="330" y="150" width="30" height="430" fill="url(#pil)"/>
+ <rect x="455" y="170" width="26" height="410" fill="url(#pil)"/><rect x="730" y="170" width="26" height="410" fill="url(#pil)"/>
+ <rect x="850" y="150" width="30" height="430" fill="url(#pil)"/><rect x="975" y="120" width="34" height="460" fill="url(#pil)"/>
+</g>
+<rect x="30" y="0" width="110" height="600" fill="url(#pil)"/>
+<rect x="1070" y="0" width="120" height="600" fill="url(#pil)"/>
+<rect x="770" y="0" width="64" height="600" fill="url(#pil)"/>
+<rect width="1200" height="600" fill="url(#pilfade)"/>
+<rect x="628" y="250" width="30" height="320" fill="url(#beam)" filter="url(#b14)" opacity=".9"/>
+<rect x="638" y="250" width="9" height="320" fill="url(#beam)"/>
+<rect x="318" y="360" width="3" height="200" fill="url(#beam)" opacity=".75"/>
+<g fill="#0b1318"><rect x="600" y="500" width="30" height="62"/><rect x="664" y="490" width="34" height="72"/><rect x="560" y="520" width="24" height="42"/><rect x="900" y="470" width="20" height="92"/></g>
+<g transform="rotate(-6 600 505)">
+ <ellipse class="ring" cx="600" cy="505" rx="565" ry="80" fill="none" stroke="#cfe3ff" stroke-width="10" filter="url(#b8)" opacity=".55" pathLength="1000"/>
+ <ellipse class="ring" cx="600" cy="505" rx="565" ry="80" fill="none" stroke="url(#ringg)" stroke-width="2.6" pathLength="1000"/>
+</g>
+<rect x="0" y="548" width="1200" height="44" fill="url(#h2)"/>
+<rect x="0" y="562" width="1200" height="44" fill="url(#h1)"/>
+<rect x="0" y="600" width="1200" height="200" fill="#020405"/>
+</svg>`;
+
+/* ---------- views ---------- */
+function viewLanding(){
+  const s=state.settings;
+  return `
+<header class="hero">
+  <div class="hero-art">${HERO_SVG}
+    <p class="hero-tag">A gathering of people<br>who feel music<br>beyond the sound</p>
+    <span class="chapter">Chapter 1.0</span>
+  </div>
+  <div class="hero-content">
+    <h1 class="hero-logo">${logo()}</h1>
+    <p class="hero-line">A night to unite where rhythms align and music defines.</p>
+    <div class="hero-date"><strong>Friday, 23 October 2026</strong><span>Somewhere in NCR</span></div>
+    <a class="btn btn-primary" href="#/request">Request an invite</a>
+    <p class="hero-note">Invite only. The location is shared with confirmed guests.</p>
+  </div>
+</header>
+<main>
+  <section class="wrap about" aria-labelledby="about-h">
+    <h2 class="display" id="about-h">A gathering of people who feel music <span class="dim">beyond the sound.</span></h2>
+    <div class="about-body">
+      <p class="lead">H∞LE is an invite-only night for people who come for the music and stay for the room. Chapter 1.0 is the first one: a small, hand-picked crowd, a sound system tuned for the space, and a location that stays secret until the day.</p>
+      <ul class="nolist"><li>No commercial detours.</li><li>No filler.</li><li>No random crowd.</li></ul>
+      <p class="loopline">Just the space, the music, the people <em>inside the loop.</em></p>
+    </div>
+  </section>
+
+  <section class="wrap" aria-labelledby="inside-h">
+    <h2 class="section-title" id="inside-h">What the night holds</h2>
+    <div class="inside-grid">
+      <div class="inside-item"><h3>Unforgettable personalities</h3><p>A room curated person by person, not ticket by ticket.</p></div>
+      <div class="inside-item"><h3>Vibrant atmosphere</h3><p>Light, space and crowd built around the music, not the other way round.</p></div>
+      <div class="inside-item"><h3>Appropriate sound</h3><p>A system tuned for the room: loud enough to feel, clear enough to hear.</p></div>
+      <div class="inside-item"><h3>Meaningful details</h3><p>Small things done with care, from the door to the last track.</p></div>
+    </div>
+  </section>
+
+  <section class="wrap" aria-labelledby="how-h">
+    <h2 class="section-title" id="how-h">How the invite works</h2>
+    <ol class="steps">
+      <li><h3>Request an invite</h3><p>Tell us who you are and why you want in. It takes two minutes.</p></li>
+      <li><h3>Profile review</h3><p>Every request is read by a person. You get a personal link to track your status.</p></li>
+      <li><h3>Pay for access</h3><p>Once you’re accepted, your link opens a UPI payment of ${inr(s.price)}.</p></li>
+      <li><h3>Location drops</h3><p>Your link becomes your pass, and the location appears on it on event day.</p></li>
+    </ol>
+  </section>
+
+  <section class="strip" aria-label="House rules">
+    <div class="wrap strip-row"><span>Invite only</span><span>Strict profile</span><span>Limited capacity</span><span>Music first</span><span>Experience driven</span></div>
+  </section>
+
+  <section class="wrap cta">
+    <p class="cta-kicker">This night is invite-based.</p>
+    <h2 class="display">If you want to be part of it, request an invite.</h2>
+    <a class="btn btn-primary" href="#/request">Request an invite</a>
+  </section>
+</main>
+<footer class="wrap foot">${logo('logo-sm')}<span>Chapter 1.0, Friday 23 October 2026, somewhere in NCR.</span></footer>`;
+}
+
+function field(id,label,control,hint){
+  return `<div class="field" data-f="${id}"><label for="${id}">${label}</label>${control}${hint?`<p class="hint">${hint}</p>`:''}<p class="err" id="${id}-err" aria-live="polite"></p></div>`;
+}
+
+function viewRequest(){
+  const s=state.settings;
+  return `<div class="page"><div class="page-inner">
+  <a class="mini-home" href="#/" aria-label="Back to H∞LE">${logo('logo-sm')}</a>
+  <h1 class="page-title">Request an invite</h1>
+  <p class="page-sub">Chapter 1.0, Friday 23 October 2026. Every request is reviewed by hand, so tell us a little about yourself.</p>
+  <form id="reqForm" novalidate>
+    ${field('name','Full name','<input type="text" id="name" autocomplete="name" maxlength="60">')}
+    ${field('phone','Phone number <small>(WhatsApp preferred)</small>','<div class="phone"><span>+91</span><input type="tel" id="phone" inputmode="numeric" autocomplete="tel-national" maxlength="10" placeholder="98XXXXXXXX"></div>','We’ll message you here when your status changes.')}
+    <div class="grid2">
+      ${field('city','City','<input type="text" id="city" maxlength="40" placeholder="e.g. Gurugram">')}
+      ${field('profession','Profession','<input type="text" id="profession" maxlength="50" placeholder="What you do">')}
+    </div>
+    <div class="grid2">
+      ${field('gender','Gender','<select id="gender"><option value="">Select</option><option>Woman</option><option>Man</option><option>Non-binary</option><option>Prefer not to say</option></select>')}
+      ${field('age','Age','<input type="number" id="age" inputmode="numeric" min="'+s.minAge+'" max="80">', s.minAge+' or older')}
+    </div>
+    ${field('instagram','Instagram <small>(optional)</small>','<input type="text" id="instagram" maxlength="40" placeholder="@yourhandle" autocapitalize="off">','It helps us review your profile faster.')}
+    ${field('referred','Who told you about H∞LE? <small>(optional)</small>','<input type="text" id="referred" maxlength="50">')}
+    <div class="field" data-f="why"><label for="why">Why do you want to join the community? <span class="counter" id="whyCount">0/150</span></label><input type="text" id="why" maxlength="150" placeholder="One line is enough"><p class="err" id="why-err" aria-live="polite"></p></div>
+    <div class="field" data-f="consent"><label class="check"><input type="checkbox" id="consent"><span>I’m ${s.minAge} or older, and I understand my details are used only to review this request and run this event.</span></label><p class="err" id="consent-err" aria-live="polite"></p></div>
+    <div class="form-actions"><button class="btn btn-primary" type="submit">Send request</button><a class="muted" href="#/">Back</a></div>
+  </form>
+  </div></div>`;
+}
+
+function track(r){
+  const steps=['Requested','Review','Payment','Pass'];
+  const idx={pending:1,waitlist:1,rejected:1,accepted:2,payment_submitted:2,confirmed:3}[r.status];
+  return `<ol class="track" aria-label="Your progress">${steps.map((s,i)=>{
+    let c=i<idx?'done':(i===idx?'now':'');
+    if(r.status==='rejected'&&i===1) c='stop';
+    if(r.status==='confirmed') c=i<3?'done':'now';
+    return `<li class="${c}">${s}</li>`;
+  }).join('')}</ol>`;
+}
+
+function linkBox(r){
+  return `<div class="linkbox"><label for="mylink">Your personal link</label>
+  <div class="linkrow"><input id="mylink" readonly value="${esc(passLink(r.token))}"><button class="btn btn-sm btn-ghost" data-copytext="${esc(passLink(r.token))}">Copy link</button></div>
+  <p class="hint">Bookmark this page. It’s the only place your status, payment and location will appear.</p></div>`;
+}
+
+function viewPass(token){
+  const r=state.requests.find(x=>x.token===token);
+  const s=state.settings;
+  const head=`<a class="mini-home" href="#/" aria-label="H∞LE home">${logo('logo-sm')}</a>`;
+  if(!r){
+    return `<div class="page"><div class="page-inner">${head}
+      <h1 class="page-title">Link not found</h1>
+      <p class="page-sub">This link doesn’t match any request. Check that you copied the whole link, or send a new request.</p>
+      <a class="btn btn-primary" href="#/request">Request an invite</a></div></div>`;
+  }
+  let body='';
+  if(r.status==='pending'){
+    body=`<div class="status-box"><span class="dot pulse"></span><div><h2>Request under review</h2><p>We read every request ourselves. This page updates the moment we decide, and we’ll message you on WhatsApp at +91 ${esc(r.phone)}.</p></div></div>
+    ${linkBox(r)}
+    <div class="next"><h3>If you’re accepted</h3><ol>
+      <li>This page opens a UPI payment of ${inr(s.price)} for access.</li>
+      <li>Pay with any UPI app and enter the transaction ID here.</li>
+      <li>Once we verify it, this page becomes your pass, and the location drops here on event day.</li>
+    </ol></div>`;
+  } else if(r.status==='waitlist'){
+    body=`<div class="status-box"><span class="dot warn"></span><div><h2>You’re on the waitlist</h2><p>Chapter 1.0 is at capacity right now. If a spot opens, this page switches to payment and we’ll message you on WhatsApp.</p></div></div>${linkBox(r)}`;
+  } else if(r.status==='rejected'){
+    body=`<div class="status-box"><span class="dot bad"></span><div><h2>Not this chapter</h2><p>We couldn’t fit your request into Chapter 1.0. Thank you for wanting in. There will be more chapters.</p></div></div>`;
+  } else if(r.status==='accepted'){
+    const upi=`upi://pay?pa=${encodeURIComponent(s.upiId)}&pn=${encodeURIComponent(s.payee)}&am=${encodeURIComponent(s.price)}&cu=INR&tn=${encodeURIComponent('HOOLE '+first(r.name))}`;
+    body=`<div class="status-box"><span class="dot ok"></span><div><h2>You’re in. One step left.</h2><p>Pay for access to confirm your spot for Chapter 1.0.</p></div></div>
+    ${r.paymentIssue?`<p class="notice">We couldn’t find a payment matching your last transaction ID. Check the 12-digit ID in your UPI app and submit it again.</p>`:''}
+    <div class="pay">
+      <div class="qr" id="qr" data-upi="${esc(upi)}" aria-label="UPI payment QR code"></div>
+      <div>
+        <p class="amount">${inr(s.price)}</p>
+        <p class="muted" style="margin:6px 0 0">Access for one, Chapter 1.0</p>
+        <div class="upi-row"><code>${esc(s.upiId)}</code><button class="btn btn-sm btn-ghost" data-copytext="${esc(s.upiId)}">Copy UPI ID</button></div>
+        <a class="btn btn-sm btn-ghost" href="${esc(upi)}">Open UPI app</a>
+        <p class="hint">Scan with GPay, PhonePe, Paytm or any UPI app, and pay the exact amount.</p>
+      </div>
+    </div>
+    <form id="utrForm" class="pay-form" novalidate>
+      ${field('utr','UPI transaction ID (UTR)','<input type="text" id="utr" inputmode="numeric" maxlength="12" placeholder="12-digit number">','You’ll find it on the payment success screen in your UPI app.')}
+      <button class="btn btn-primary" type="submit">Submit payment details</button>
+    </form>`;
+  } else if(r.status==='payment_submitted'){
+    body=`<div class="status-box"><span class="dot pulse"></span><div><h2>Payment under verification</h2><p>We’re matching transaction ID ${esc(r.utr)} with our account. This page becomes your pass once it’s confirmed.</p></div></div>${linkBox(r)}`;
+  } else if(r.status==='confirmed'){
+    const loc=state.location;
+    body=`<div class="pass">
+      <div class="pass-head">${logo('logo-md')}<span>Chapter 1.0</span></div>
+      <div class="pass-name">${esc(r.name)}</div>
+      <div class="pass-meta">
+        <div><span>Date</span><strong>Fri, 23 Oct 2026</strong></div>
+        <div><span>Pass code</span><strong>${esc(r.passCode)}</strong></div>
+        <div><span>Admits</span><strong>One</strong></div>
+      </div>
+    </div>
+    <div class="countdown" id="countdown" aria-live="off"></div>
+    ${loc?`<div class="location live"><h2>Location</h2><p class="addr">${esc(loc.addr)}</p>${loc.notes?`<p class="loc-notes">${esc(loc.notes)}</p>`:'<p class="loc-notes"></p>'}<a class="btn btn-primary" href="${esc(safeMaps(loc))}" target="_blank" rel="noopener">Open in Google Maps</a><p class="hint">Shared ${fmtTime(loc.at)}</p></div>`
+          :`<div class="location"><h2>Location drops here</h2><p class="loc-notes" style="margin:0">The location will appear on this page on event day. Keep this link saved; there’s nothing to install.</p></div>`}
+    ${linkBox(r)}
+    <p class="fine">Show this pass and a photo ID at the door. Passes aren’t transferable, and the name must match your ID.</p>`;
+  }
+  return `<div class="page"><div class="page-inner">${head}
+    <p class="hello">Hi ${esc(first(r.name))},</p>
+    <h1 class="page-title">${r.status==='confirmed'?'Your pass':'Your invite status'}</h1>
+    ${track(r)}${body}</div></div>`;
+}
+
+/* ---------- admin ---------- */
+let adminUnlocked=false;
+let adminFilter='pending';
+const LABELS={pending:'In review',accepted:'Awaiting payment',payment_submitted:'Verify payment',confirmed:'Confirmed',waitlist:'Waitlist',rejected:'Rejected',all:'All'};
+
+function actionsFor(r,full){
+  const link=passLink(r.token);
+  const b=(act,label,cls)=>`<button class="btn btn-sm ${cls||'btn-ghost'}" data-act="${act}" data-id="${r.id}"${act==='accept'&&full?' disabled title="Capacity is full"':''}>${label}</button>`;
+  const wa=msg=>`<a class="btn btn-sm btn-ghost" target="_blank" rel="noopener" href="https://wa.me/91${esc(r.phone)}?text=${encodeURIComponent(msg)}">WhatsApp</a>`;
+  const cp=`<button class="btn btn-sm btn-ghost" data-copytext="${esc(link)}">Copy link</button>`;
+  switch(r.status){
+    case 'pending': return b('accept','Accept','btn-ok')+b('waitlist','Waitlist')+b('reject','Reject','btn-danger');
+    case 'waitlist': return b('accept','Accept','btn-ok')+b('reject','Reject','btn-danger');
+    case 'accepted': return wa(`Hi ${first(r.name)}, you’re in for H∞LE Chapter 1.0. Complete your access payment on your personal link: ${link}`)+cp+b('revoke','Back to review');
+    case 'payment_submitted': return b('verify','Payment received','btn-ok')+b('nopay','Payment not found','btn-danger');
+    case 'confirmed': return wa(`Hi ${first(r.name)}, your H∞LE pass is confirmed. The location will drop on your pass on event day: ${link}`)+cp;
+    case 'rejected': return b('restore','Back to review');
+  }
+  return '';
+}
+
+function viewAdmin(){
+  const s=state.settings;
+  if(!adminUnlocked){
+    return `<div class="gate">
+      <a class="mini-home" href="#/">${logo('logo-sm')}</a>
+      <h1 class="page-title">Admin</h1>
+      <form id="gateForm" novalidate>
+        ${field('apass','Password','<input type="password" id="apass" autocomplete="current-password">','Prototype password: '+esc(s.adminPass))}
+        <button class="btn btn-primary" type="submit">Unlock</button>
+      </form></div>`;
+  }
+  const R=state.requests;
+  const c=k=>R.filter(r=>r.status===k).length;
+  const taken=spotsTaken(state), full=taken>=s.capacity;
+  const shown=(adminFilter==='all'?R:R.filter(r=>r.status===adminFilter)).slice().sort((a,b)=>b.createdAt-a.createdAt);
+  const tabs=['pending','accepted','payment_submitted','confirmed','waitlist','rejected','all'].map(k=>
+    `<button class="tab" data-filter="${k}" aria-pressed="${adminFilter===k}">${LABELS[k]}<em>${k==='all'?R.length:c(k)}</em></button>`).join('');
+  const rows=shown.length?shown.map(r=>`<article class="req">
+    <div>
+      <h3>${esc(r.name)}<small>${esc(r.age)}, ${esc(r.gender)}</small>${adminFilter==='all'?`<span class="badge">${LABELS[r.status]}</span>`:''}</h3>
+      <p class="req-meta"><span>${esc(r.profession)}</span><span>${esc(r.city)}</span><span>+91 ${esc(r.phone)}</span>${r.instagram?`<a href="https://instagram.com/${encodeURIComponent(r.instagram)}" target="_blank" rel="noopener">@${esc(r.instagram)}</a>`:''}${r.referred?`<span>Referred by ${esc(r.referred)}</span>`:''}<span>${fmtTime(r.createdAt)}</span></p>
+      <p class="req-why">“${esc(r.why)}”</p>
+      ${r.status==='payment_submitted'?`<p class="req-extra">UTR ${esc(r.utr)}. Match it in your UPI or bank app before confirming.</p>`:''}
+      ${r.status==='confirmed'?`<p class="req-extra okc">Pass ${esc(r.passCode)}, UTR ${esc(r.utr)}</p>`:''}
+    </div>
+    <div class="req-actions">${actionsFor(r,full)}</div>
+  </article>`).join(''):`<div class="empty">Nothing in ${LABELS[adminFilter].toLowerCase()} right now.${R.length?'':' Use “Add sample requests” in the Prototype menu to try the flow.'}</div>`;
+
+  const loc=state.location;
+  return `<div class="admin">
+  <div class="admin-bar">
+    <div class="left">${logo('logo-sm')}<span class="tag">Admin</span></div>
+    <div class="right"><a class="btn btn-sm btn-ghost" href="#/">Guest site</a><button class="btn btn-sm btn-ghost" id="lockBtn">Lock</button></div>
+  </div>
+  <div class="stats">
+    <div class="stat"><b>${c('pending')}</b><span>New requests</span></div>
+    <div class="stat"><b>${c('accepted')}</b><span>Awaiting payment</span></div>
+    <div class="stat"><b>${c('payment_submitted')}</b><span>To verify</span></div>
+    <div class="stat"><b>${c('confirmed')}<span style="font-size:15px;color:var(--faint)"> / ${s.capacity}</span></b><span>Confirmed guests</span><div class="cap"><i style="width:${Math.min(100,taken/s.capacity*100)}%"></i></div></div>
+    <div class="stat"><b>${inr(c('confirmed')*s.price)}</b><span>Collected</span></div>
+  </div>
+  ${full?`<p class="notice" style="margin:-12px 0 24px">Capacity is full (${taken} spots held). New accepts are paused; waitlist requests or raise capacity in settings.</p>`:''}
+  <div class="admin-grid">
+    <div><div class="tabs" role="group" aria-label="Filter requests">${tabs}</div>${rows}</div>
+    <aside>
+      <div class="admin-card">
+        <h2>Location drop</h2>
+        <p>Appears instantly on every confirmed guest’s pass.</p>
+        ${loc?`<div class="live-box"><strong>Live</strong> since ${fmtTime(loc.at)} on ${c('confirmed')} passes.<br>${esc(loc.addr)}</div>`:''}
+        <form id="locForm" novalidate>
+          ${field('laddr','Address or place name','<textarea id="laddr" maxlength="240">'+esc(loc?loc.addr:'')+'</textarea>')}
+          ${field('lmaps','Google Maps link <small>(optional)</small>','<input type="url" id="lmaps" placeholder="https://maps.app.goo.gl/..." value="'+esc(loc?loc.maps:'')+'">')}
+          ${field('lnotes','Entry notes <small>(optional)</small>','<input type="text" id="lnotes" maxlength="140" placeholder="e.g. Gate 2, basement entrance" value="'+esc(loc?loc.notes:'')+'">')}
+          <button class="btn btn-primary btn-sm" type="submit">${loc?'Update location':'Drop location'}</button>
+          ${loc?'<button class="btn btn-danger btn-sm" type="button" id="takeDown" style="margin-left:6px">Take down</button>':''}
+        </form>
+      </div>
+      <div class="admin-card">
+        <h2>Settings</h2>
+        <p>Used on every payment page.</p>
+        <form id="setForm" novalidate>
+          <div class="grid2">
+            ${field('sprice','Price (₹)','<input type="number" id="sprice" min="0" value="'+esc(s.price)+'">')}
+            ${field('scap','Capacity','<input type="number" id="scap" min="1" value="'+esc(s.capacity)+'">')}
+          </div>
+          ${field('supi','UPI ID','<input type="text" id="supi" autocapitalize="off" value="'+esc(s.upiId)+'">')}
+          ${field('spayee','Payee name','<input type="text" id="spayee" value="'+esc(s.payee)+'">')}
+          <div class="grid2">
+            ${field('sage','Minimum age','<input type="number" id="sage" min="18" value="'+esc(s.minAge)+'">')}
+            ${field('sstart','Event starts (IST)','<input type="datetime-local" id="sstart" value="'+esc(s.eventStart)+'">')}
+          </div>
+          <button class="btn btn-ghost btn-sm" type="submit">Save settings</button>
+        </form>
+      </div>
+    </aside>
+  </div></div>`;
+}
+
+/* ---------- binding ---------- */
+function setErr(id,msg){ const e=document.getElementById(id+'-err'); if(e) e.textContent=msg||''; const f=document.querySelector(`[data-f="${id}"]`); if(f) f.classList.toggle('has-err',!!msg); }
+
+function bindRequest(){
+  const why=$('#why'), cnt=$('#whyCount');
+  why.addEventListener('input',()=>{ cnt.textContent=why.value.length+'/150'; });
+  $('#phone').addEventListener('input',e=>{ e.target.value=e.target.value.replace(/\D/g,'').slice(0,10); });
+  $('#reqForm').addEventListener('submit',e=>{
+    e.preventDefault();
+    const s=state.settings;
+    const v=id=>($('#'+id).value||'').trim();
+    const d={ name:v('name'), phone:v('phone'), city:v('city'), profession:v('profession'), gender:v('gender'), age:parseInt(v('age'),10), instagram:v('instagram').replace(/^@+/,'').replace(/\s/g,''), referred:v('referred'), why:v('why') };
+    const errs={};
+    if(d.name.length<2) errs.name='Enter your full name.';
+    if(!/^[6-9]\d{9}$/.test(d.phone)) errs.phone='Enter a 10-digit Indian mobile number.';
+    else if(load().requests.some(r=>r.phone===d.phone)) errs.phone='This number already has a request. Use the personal link you got when you applied.';
+    if(!d.city) errs.city='Enter your city.';
+    if(!d.profession) errs.profession='Enter your profession.';
+    if(!d.gender) errs.gender='Select an option.';
+    if(!(d.age>=s.minAge&&d.age<=80)) errs.age=`You need to be ${s.minAge} or older.`;
+    if(d.why.length<10) errs.why='Write at least a short line (10+ characters).';
+    if(!$('#consent').checked) errs.consent='Confirm this to send your request.';
+    ['name','phone','city','profession','gender','age','why','consent'].forEach(k=>setErr(k,errs[k]));
+    const firstErr=Object.keys(errs)[0];
+    if(firstErr){ const el=document.getElementById(firstErr); if(el) el.focus(); return; }
+    const token=rid(10);
+    commit(st=>{ st.requests.push(Object.assign(d,{ id:rid(8), token, status:'pending', createdAt:Date.now() })); st.mine.push(token); });
+    location.hash='#/pass/'+token;
+  });
+}
+
+function bindPass(){
+  const qr=$('#qr');
+  if(qr){
+    if(window.QRCode){ new QRCode(qr,{ text:qr.dataset.upi, width:168, height:168, colorDark:'#04070a', colorLight:'#ffffff', correctLevel:QRCode.CorrectLevel.M }); }
+    else qr.innerHTML='<span style="color:#04070a;font-size:13px;text-align:center">QR unavailable. Use the UPI ID.</span>';
+  }
+  const f=$('#utrForm');
+  if(f){
+    $('#utr').addEventListener('input',e=>{ e.target.value=e.target.value.replace(/\D/g,'').slice(0,12); });
+    f.addEventListener('submit',e=>{
+      e.preventDefault();
+      const utr=$('#utr').value.trim();
+      const token=decodeURIComponent(location.hash.slice(7));
+      if(!/^\d{12}$/.test(utr)){ setErr('utr','Enter the 12-digit transaction ID.'); return; }
+      if(load().requests.some(r=>r.utr===utr&&r.token!==token)){ setErr('utr','This transaction ID was already used.'); return; }
+      commit(st=>{ const r=st.requests.find(x=>x.token===token); if(r){ r.utr=utr; r.status='payment_submitted'; r.paymentIssue=false; r.paidAt=Date.now(); } });
+      toast('Payment details sent');
+    });
+  }
+  startCountdown();
+}
+
+let timer=null;
+function startCountdown(){
+  clearInterval(timer);
+  const el=$('#countdown'); if(!el) return;
+  const target=eventDate().getTime();
+  const tick=()=>{
+    const d=target-Date.now();
+    if(d<=0){ el.style.display='block'; el.innerHTML='<div style="padding:16px">It’s tonight. See you inside the loop.</div>'; clearInterval(timer); return; }
+    const parts=[[Math.floor(d/864e5),'days'],[Math.floor(d%864e5/36e5),'hours'],[Math.floor(d%36e5/6e4),'mins'],[Math.floor(d%6e4/1e3),'secs']];
+    el.innerHTML=parts.map(([n,l])=>`<div><b>${String(n).padStart(2,'0')}</b><span>${l}</span></div>`).join('');
+  };
+  tick(); timer=setInterval(tick,1000);
+}
+
+function bindAdmin(){
+  const g=$('#gateForm');
+  if(g){
+    $('#apass').focus();
+    g.addEventListener('submit',e=>{ e.preventDefault(); if($('#apass').value===state.settings.adminPass){ adminUnlocked=true; render(); } else setErr('apass','That password isn’t right.'); });
+    return;
+  }
+  $('#lockBtn').addEventListener('click',()=>{ adminUnlocked=false; render(); });
+  document.querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>{ adminFilter=b.dataset.filter; render(); }));
+  $('#locForm').addEventListener('submit',e=>{
+    e.preventDefault();
+    const addr=$('#laddr').value.trim(), maps=$('#lmaps').value.trim(), notes=$('#lnotes').value.trim();
+    let bad=false;
+    if(!addr){ setErr('laddr','Enter the address or place name.'); bad=true; } else setErr('laddr');
+    if(maps&&!/^https:\/\//i.test(maps)){ setErr('lmaps','Paste a link that starts with https://'); bad=true; } else setErr('lmaps');
+    if(bad) return;
+    commit(st=>{ st.location={ addr, maps, notes, at:Date.now() }; });
+    toast('Location is live on confirmed passes');
+  });
+  const td=$('#takeDown'); if(td) td.addEventListener('click',()=>{ commit(st=>{ st.location=null; }); toast('Location taken down'); });
+  $('#setForm').addEventListener('submit',e=>{
+    e.preventDefault();
+    const price=parseInt($('#sprice').value,10), cap=parseInt($('#scap').value,10), age=parseInt($('#sage').value,10);
+    const upi=$('#supi').value.trim(), payee=$('#spayee').value.trim(), start=$('#sstart').value;
+    let bad=false;
+    if(!(price>=0)){ setErr('sprice','Enter a price.'); bad=true; } else setErr('sprice');
+    if(!(cap>=1)){ setErr('scap','At least 1.'); bad=true; } else setErr('scap');
+    if(!/^[\w.\-]{2,}@[a-zA-Z]{2,}$/.test(upi)){ setErr('supi','Use the format name@bank.'); bad=true; } else setErr('supi');
+    if(!(age>=18)){ setErr('sage','18 or higher.'); bad=true; } else setErr('sage');
+    if(bad) return;
+    commit(st=>{ Object.assign(st.settings,{ price, capacity:cap, minAge:age, upiId:upi, payee:payee||'HOOLE Events', eventStart:start||st.settings.eventStart }); });
+    toast('Settings saved');
+  });
+}
+
+document.addEventListener('click',e=>{
+  const cp=e.target.closest('[data-copytext]');
+  if(cp){ e.preventDefault(); copyText(cp.dataset.copytext); return; }
+  const a=e.target.closest('[data-act]');
+  if(a){
+    const id=a.dataset.id, act=a.dataset.act;
+    commit(st=>{
+      const r=st.requests.find(x=>x.id===id); if(!r) return;
+      if(act==='accept'){ if(spotsTaken(st)>=st.settings.capacity){ toast('Capacity is full'); return; } r.status='accepted'; r.paymentIssue=false; toast('Accepted. Send them their link on WhatsApp.'); }
+      else if(act==='waitlist'){ r.status='waitlist'; toast('Moved to waitlist'); }
+      else if(act==='reject'){ r.status='rejected'; toast('Rejected'); }
+      else if(act==='revoke'||act==='restore'){ r.status='pending'; toast('Moved back to review'); }
+      else if(act==='verify'){ r.status='confirmed'; r.passCode=r.passCode||('HL-'+rid(4).toUpperCase()); toast('Confirmed. Their pass is live.'); }
+      else if(act==='nopay'){ r.status='accepted'; r.paymentIssue=true; toast('Sent back to payment'); }
+    });
+  }
+});
+
+/* ---------- prototype dock ---------- */
+const SAMPLE=[
+  ['Aarav Mehta','9810000001','Gurugram','Man',27,'Product designer','aarav.wav','Kabir','Techno is the only place my head goes quiet.','pending'],
+  ['Ishita Kapoor','9810000002','South Delhi','Woman',25,'Architect','ishitaplays','','I collect records and I’m tired of clubs that play the charts.','pending'],
+  ['Kabir Sethi','9810000003','Noida','Man',30,'Sound engineer','kabir.low','','I want to hear a room that’s tuned properly for once.','accepted'],
+  ['Naina Arora','9810000004','Gurugram','Woman',28,'Brand strategist','naina.after','Ishita','Looking for a crowd that dances instead of filming.','payment_submitted'],
+  ['Rohan Bhatia','9810000005','West Delhi','Man',33,'Founder','rohanbhatia','','I miss the energy of small underground nights.','confirmed'],
+  ['Tara Malhotra','9810000006','Faridabad','Woman',24,'Illustrator','tara.draws','','Music is how I find my people.','waitlist']
+];
+let dockOpen=false;
+function renderDock(){
+  const mine=state.mine.map(t=>state.requests.find(r=>r.token===t)).filter(Boolean);
+  $('#dock').innerHTML=`<div class="dock-menu" ${dockOpen?'':'hidden'}>
+    <a href="#/">Guest site</a><a href="#/request">Request form</a><a href="#/admin">Admin panel</a>
+    ${mine.length?'<h4>Your test requests</h4>'+mine.map(r=>`<a href="#/pass/${r.token}">${esc(r.name)} <span class="muted">(${LABELS[r.status].toLowerCase()})</span></a>`).join(''):''}
+    <h4>Demo data</h4>
+    <button id="seedBtn">Add sample requests</button><button id="resetBtn">Reset everything</button>
+    <p>Prototype: data is saved only in this browser. Open the admin panel in another tab to see changes live.</p>
+  </div><button class="dock-toggle" id="dockToggle" aria-expanded="${dockOpen}">Prototype</button>`;
+  $('#dockToggle').onclick=()=>{ dockOpen=!dockOpen; renderDock(); };
+  $('#seedBtn').onclick=()=>{
+    commit(st=>{
+      SAMPLE.forEach((x,i)=>{
+        if(st.requests.some(r=>r.phone===x[1])) return;
+        const r={ id:rid(8), token:rid(10), name:x[0], phone:x[1], city:x[2], gender:x[3], age:x[4], profession:x[5], instagram:x[6], referred:x[7], why:x[8], status:x[9], createdAt:Date.now()-(i+1)*3600e3 };
+        if(r.status==='payment_submitted'||r.status==='confirmed') r.utr=String(412398765010+i);
+        if(r.status==='confirmed') r.passCode='HL-'+rid(4).toUpperCase();
+        st.requests.push(r);
+      });
+    });
+    toast('Sample requests added');
+  };
+  $('#resetBtn').onclick=()=>{ if(confirm('Clear all requests, settings and the location?')){ memory=null; try{ localStorage.removeItem(KEY); }catch(e){} adminUnlocked=false; render(); toast('Demo reset'); } };
+}
+
+/* ---------- router ---------- */
+function render(){
+  state=load();
+  clearInterval(timer);
+  const h=location.hash.replace(/^#/,'')||'/';
+  const app=$('#app');
+  let mode='guest';
+  if(h.indexOf('/pass/')===0){ app.innerHTML=viewPass(decodeURIComponent(h.slice(6))); bindPass(); }
+  else if(h==='/request'){ app.innerHTML=viewRequest(); bindRequest(); }
+  else if(h==='/admin'){ mode='admin'; app.innerHTML=viewAdmin(); bindAdmin(); }
+  else { app.innerHTML=viewLanding(); }
+  document.body.dataset.mode=mode;
+  renderDock();
+}
+window.addEventListener('hashchange',()=>{ render(); window.scrollTo(0,0); });
+window.addEventListener('storage',e=>{ if(e.key===KEY) render(); });
+render();
+})();
+</script>
+</body>
+</html>
